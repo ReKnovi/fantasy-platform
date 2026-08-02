@@ -20,5 +20,10 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/lib ./lib
 
+# node:*-slim images ship a low-privilege "node" user — use it instead of
+# running the process as root inside the container.
+RUN chown -R node:node /app
+USER node
+
 EXPOSE 8080
 CMD ["node", "lib/server.js"]

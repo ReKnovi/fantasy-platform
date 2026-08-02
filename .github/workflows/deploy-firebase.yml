@@ -47,4 +47,7 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
       - name: Deploy Firebase
-        run: npx firebase-tools@latest deploy --project "${{ vars.FIREBASE_PROJECT_ID }}" --only functions,hosting
+        # Pinned deliberately — an unpinned @latest here means a new firebase-tools
+        # release can change deploy behavior with zero warning on an ordinary push
+        # to main. Bump this version intentionally when you want the update.
+        run: npx firebase-tools@15.25.1 deploy --project "${{ vars.FIREBASE_PROJECT_ID }}" --only functions,hosting

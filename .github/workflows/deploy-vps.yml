@@ -20,9 +20,36 @@ env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}/fantasy-functions
 
 jobs:
+  verify:
+    name: Lint And Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Pin npm
+        run: npm install -g npm@11.6.2
+
+      - name: Install dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Lint and build
+        working-directory: functions
+        run: npm run ci
+
   build:
     name: Build And Push Image
     runs-on: ubuntu-latest
+    needs: verify
 
     steps:
       - name: Checkout
@@ -62,8 +89,12 @@ jobs:
             set -eu
             docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
             docker pull "${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}"
-            docker stop fantasy-functions || true
-            docker rm fantasy-functions || true
+
+            # Keep the currently-running container around under a temp name so
+            # we can roll back to it if the new one fails its health check,
+            # instead of leaving the VPS with no container running at all.
+            docker rename fantasy-functions fantasy-functions-previous 2>/dev/null || true
+
             docker run -d \
               --name fantasy-functions \
               --restart unless-stopped \
@@ -72,3 +103,28 @@ jobs:
               -e PORT=8080 \
               -e DATABASE_URL='${{ secrets.VPS_DATABASE_URL }}' \
               "${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}"
+
+            echo "Waiting for the new container to report healthy..."
+            attempt=0
+            until curl --fail --silent --max-time 3 http://localhost:8080/health; do
+              attempt=$((attempt + 1))
+              if [ "$attempt" -ge 10 ]; then
+                echo "New container did not become healthy after 10 attempts."
+                echo "--- new container logs ---"
+                docker logs fantasy-functions || true
+                echo "Rolling back..."
+                docker stop fantasy-functions || true
+                docker rm fantasy-functions || true
+                if docker inspect fantasy-functions-previous >/dev/null 2>&1; then
+                  docker rename fantasy-functions-previous fantasy-functions
+                  docker start fantasy-functions
+                  echo "Rolled back to the previous container."
+                fi
+                exit 1
+              fi
+              sleep 2
+            done
+            echo "New container is healthy."
+
+            # Deploy succeeded, the old container is no longer needed.
+            docker rm -f fantasy-functions-previous 2>/dev/null || true

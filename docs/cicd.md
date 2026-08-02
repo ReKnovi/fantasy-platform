@@ -16,7 +16,7 @@ The functions package pins npm `11.6.2` so GitHub Actions, Docker, and local ins
   Runs on pushes to `main` and manual dispatch. It verifies the functions package and deploys Firebase Functions plus Hosting.
 
 - `.github/workflows/deploy-vps.yml`
-  Manual only. It builds and pushes the functions Docker image to GHCR, then deploys that image over SSH to a VPS.
+  Manual only. Runs its own lint/build gate first (`verify`), then builds and pushes the functions Docker image to GHCR, then deploys that image over SSH to a VPS. After starting the new container, it polls `/health` for up to ~20 seconds; if the new container never reports healthy, it rolls back to the previous container automatically and fails the run rather than leaving a broken deploy silently marked "success".
 
 ## GitHub Environments
 
