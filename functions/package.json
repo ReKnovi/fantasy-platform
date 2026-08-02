@@ -1,12 +1,16 @@
 {
   "name": "functions",
+  "packageManager": "npm@11.6.2",
   "scripts": {
     "lint": "eslint --ext .js,.ts .",
     "build": "tsc",
+    "ci": "npm run lint && npm run build",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
+    "serve:http": "npm run build && node lib/server.js",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
+    "start:http": "node lib/server.js",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },

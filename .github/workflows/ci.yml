@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  functions:
+    name: Functions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Pin npm
+        run: npm install -g npm@11.6.2
+
+      - name: Install dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Lint and build
+        working-directory: functions
+        run: npm run ci
+
+      - name: Build VPS container image
+        run: docker build -t fantasy-functions:${{ github.sha }} functions

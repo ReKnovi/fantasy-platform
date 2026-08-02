@@ -1,24 +1,21 @@
 import * as dotenv from "dotenv";
 import * as path from "path";
 
-/**
- * Loads the project-root .env (one level above `functions/`) so local dev
- * (emulator, functions:shell, or plain ts-node) all see the same
- * DB_HOST/DB_PORT/etc. that the rest of the project already uses.
- *
- * In production, don't rely on this file at all — use
- * `firebase functions:secrets:set` / `firebase functions:config` instead,
- * since .env is git-ignored and never deployed.
- */
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+[
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "../.env"),
+  path.resolve(__dirname, "../../../.env"),
+].forEach((envFile) => {
+  dotenv.config({path: envFile});
+});
 
-function required(key: string, fallback?: string): string {
+const required = (key: string, fallback?: string): string => {
   const value = process.env[key] ?? fallback;
   if (value === undefined) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value;
-}
+};
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",

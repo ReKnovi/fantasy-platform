@@ -1,4 +1,4 @@
-import { pool } from "../../database/pool";
+import {pool} from "../../database/pool";
 
 export interface PlayerRow {
   id: number;
@@ -16,11 +16,20 @@ const BASE_SELECT = `
   WHERE removed = false
 `;
 
+/**
+ * Returns all active, non-removed players in stable display order.
+ */
 export async function findAllPlayers(): Promise<PlayerRow[]> {
-  const result = await pool.query<PlayerRow>(`${BASE_SELECT} ORDER BY name ASC`);
+  const result = await pool.query<PlayerRow>(
+    `${BASE_SELECT} ORDER BY name ASC`
+  );
   return result.rows;
 }
 
+/**
+ * Returns one active, non-removed player by database id.
+ * @param {number} id Player database id.
+ */
 export async function findPlayerById(id: number): Promise<PlayerRow | null> {
   const result = await pool.query<PlayerRow>(
     `${BASE_SELECT} AND id = $1`,

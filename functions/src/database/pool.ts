@@ -1,5 +1,5 @@
-import { Pool } from "pg";
-import { env } from "../config/env";
+import {Pool} from "pg";
+import {env} from "../config/env";
 
 /**
  * Single shared pg Pool for the whole function instance.
@@ -12,15 +12,15 @@ import { env } from "../config/env";
  * Postgres's connection limit. Locally against Docker Postgres this pool
  * talks directly to the DB, which is fine for dev.
  */
-export const pool = env.db.connectionString
-  ? new Pool({ connectionString: env.db.connectionString })
-  : new Pool({
-      host: env.db.host,
-      port: env.db.port,
-      database: env.db.name,
-      user: env.db.user,
-      password: env.db.password,
-    });
+export const pool = env.db.connectionString ?
+  new Pool({connectionString: env.db.connectionString}) :
+  new Pool({
+    host: env.db.host,
+    port: env.db.port,
+    database: env.db.name,
+    user: env.db.user,
+    password: env.db.password,
+  });
 
 pool.on("error", (err) => {
   // A background/idle client failed — don't let this crash the whole
