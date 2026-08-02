@@ -103,6 +103,19 @@ npm ci
 
 ## Run Locally
 
+Run the Firebase all emulator:
+
+```sh
+firebase emulators:start
+```
+
+metrices and UI visualations available at:
+
+```text
+http://127.0.0.1:5000/
+http://127.0.0.1:4000/
+```
+
 Run the Firebase Functions emulator:
 
 ```sh
@@ -151,11 +164,11 @@ curl http://localhost:5001/premier-league-af352/us-central1/api/players/1
 
 Current endpoints:
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/health` | Liveness check without DB access. |
-| `GET` | `/players` | Returns non-removed players ordered by name. |
-| `GET` | `/players/:id` | Returns one visible player by id. |
+| Method | Path           | Description                                  |
+| ------ | -------------- | -------------------------------------------- |
+| `GET`  | `/health`      | Liveness check without DB access.            |
+| `GET`  | `/players`     | Returns non-removed players ordered by name. |
+| `GET`  | `/players/:id` | Returns one visible player by id.            |
 
 ## Quality Checks
 
