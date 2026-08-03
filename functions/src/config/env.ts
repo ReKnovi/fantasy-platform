@@ -20,13 +20,20 @@ const required = (key: string, fallback?: string): string => {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   db: {
-    // If DATABASE_URL is set, it wins (this is what a Cloud SQL / Supabase /
-    // Neon pooled connection string would look like in production).
+    // If DATABASE_URL is set, it wins (this is what a Supabase/Neon pooled
+    // connection string, or a Cloud SQL Auth Proxy tunnel during local
+    // migrations, would look like).
     connectionString: process.env.DATABASE_URL,
     host: required("DB_HOST", "localhost"),
     port: Number(required("DB_PORT", "5432")),
     name: required("DB_NAME", "fantasy"),
     user: required("DB_USER", "fantasy_user"),
     password: required("DB_PASSWORD"),
+    cloudSql: {
+      // Unset locally and in CI — only present once deployed with the four
+      // secrets from docs/cloud-sql.md. This is the switch pool.ts checks
+      // to decide whether to use the Cloud SQL connector at all.
+      instanceConnectionName: process.env.INSTANCE_CONNECTION_NAME,
+    },
   },
 };
