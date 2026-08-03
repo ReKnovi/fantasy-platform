@@ -4,17 +4,37 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "husky",
+    "lint": "npm --prefix functions run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm --prefix functions test",
+    "build": "npm --prefix functions run build",
+    "ci": "npm run lint && npm run format:check && npm run test && npm run build && npm run validate",
+    "validate": "node scripts/validate-repo.mjs",
+    "validate:staged": "node scripts/check-staged.mjs --staged",
+    "validate:secrets": "node scripts/check-staged.mjs --all --secrets-only",
+    "validate:push": "npm run test && npm run build && npm run validate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@dataconnect/generated": "file:src/dataconnect-generated",
     "pg": "^8.22.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0"
+    "@types/pg": "^8.20.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6"
+  },
+  "lint-staged": {
+    "*.{js,ts,json,md,yml,yaml,html,css,sql}": [
+      "prettier --write --ignore-unknown"
+    ],
+    "functions/src/**/*.ts": [
+      "npm --prefix functions run lint -- --fix"
+    ]
   }
 }

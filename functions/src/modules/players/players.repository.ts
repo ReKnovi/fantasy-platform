@@ -33,9 +33,8 @@ export async function findAllPlayers(): Promise<PlayerRow[]> {
  */
 export async function findPlayerById(id: number): Promise<PlayerRow | null> {
   const pool = await getPool();
-  const result = await pool.query<PlayerRow>(
-    `${BASE_SELECT} AND id = $1`,
-    [id]
-  );
+  const result = await pool.query<PlayerRow>(`${BASE_SELECT} AND id = $1`, [
+    id,
+  ]);
   return result.rows[0] ?? null;
 }

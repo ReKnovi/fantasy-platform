@@ -26,7 +26,6 @@ VPS/container deployment.
 │   ├── src/index.ts       # Firebase Functions entrypoint
 │   └── src/server.ts      # Plain HTTP server entrypoint for VPS/Docker
 ├── hosting/               # Firebase Hosting static files
-├── dataconnect/           # Firebase Data Connect assets
 └── .github/workflows/     # CI, Firebase deploy, VPS deploy workflows
 ```
 
@@ -57,8 +56,8 @@ DB_USER=fantasy_user
 DB_PASSWORD=pass123
 ```
 
-`DATABASE_URL` is optional. If it is set, it overrides the individual
-`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` values.
+`DATABASE_URL` is optional. If it is set, it overrides the individual `DB_HOST`,
+`DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` values.
 
 ## Database Setup
 
@@ -182,12 +181,12 @@ curl -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
 
 Current endpoints:
 
-| Method | Path           | Auth         | Description                                  |
-| ------ | -------------- | ------------ | -------------------------------------------- |
-| `POST` | `/dev/auth/id-token` | None | Local-only helper that returns a Firebase Auth emulator ID token. |
-| `GET`  | `/health`      | None         | Liveness check without DB access.            |
-| `GET`  | `/players`     | Firebase JWT | Returns non-removed players ordered by name. |
-| `GET`  | `/players/:id` | Firebase JWT | Returns one visible player by id.            |
+| Method | Path                 | Auth         | Description                                                       |
+| ------ | -------------------- | ------------ | ----------------------------------------------------------------- |
+| `POST` | `/dev/auth/id-token` | None         | Local-only helper that returns a Firebase Auth emulator ID token. |
+| `GET`  | `/health`            | None         | Liveness check without DB access.                                 |
+| `GET`  | `/players`           | Firebase JWT | Returns non-removed players ordered by name.                      |
+| `GET`  | `/players/:id`       | Firebase JWT | Returns one visible player by id.                                 |
 
 Google sign-in is implemented in the hosted app. In local development the
 frontend connects to the Firebase Auth emulator at `127.0.0.1:9099`; protected

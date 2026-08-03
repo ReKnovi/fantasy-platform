@@ -10,7 +10,9 @@ firebase-debug.*.log*
 # Firebase cache
 .firebase/
 
-# Firebase config
+# Build output
+functions/lib/
+dist/
 
 # Uncomment this if you'd like others to create their own Firebase project.
 # For a team working on the same Firebase project(s), it is recommended to leave
@@ -64,6 +66,35 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
 
-# dataconnect generated files
+# Secret material
+*.pem
+*.key
+*.p12
+*.pfx
+service-account*.json
+firebase-service-account*.json
+
+# Local tooling
+.husky/_/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Data Connect (removed from project)
+dataconnect/
+src/dataconnect-generated/
 .dataconnect

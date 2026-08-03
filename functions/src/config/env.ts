@@ -21,10 +21,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   firebase: {
     projectId: required("FIREBASE_PROJECT_ID", "premier-league-af352"),
-    authEmulatorHost: required(
-      "FIREBASE_AUTH_EMULATOR_HOST",
-      "127.0.0.1:9099"
-    ),
+    authEmulatorHost: required("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099"),
     allowDevAuthEndpoint:
       (process.env.NODE_ENV ?? "development") !== "production" &&
       Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST ?? "127.0.0.1:9099"),

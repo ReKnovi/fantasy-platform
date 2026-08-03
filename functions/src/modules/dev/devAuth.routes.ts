@@ -43,7 +43,7 @@ const authRequest = async (
       }),
     }
   );
-  const data = await response.json() as EmulatorAuthResponse;
+  const data = (await response.json()) as EmulatorAuthResponse;
 
   if (!response.ok) {
     throw new Error(data.error?.message ?? "Firebase Auth emulator failed");

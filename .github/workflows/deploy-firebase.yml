@@ -1,9 +1,14 @@
 name: Deploy Firebase
 
 on:
-  push:
-    branches:
-      - main
+  # Temporarily manual-only until Blaze is enabled and these GitHub values exist:
+  # - vars.FIREBASE_PROJECT_ID
+  # - secrets.FIREBASE_SERVICE_ACCOUNT_JSON
+  #
+  # Restore this block when production Firebase deploys are ready:
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 permissions:
@@ -28,17 +33,21 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: functions/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
 
       - name: Pin npm
         run: npm install -g npm@11.6.2
+
+      - name: Install root dependencies
+        run: npm ci
 
       - name: Install functions dependencies
         working-directory: functions
         run: npm ci
 
-      - name: Verify functions
-        working-directory: functions
+      - name: Run quality checks
         run: npm run ci
 
       - name: Authenticate to Google Cloud
@@ -50,4 +59,6 @@ jobs:
         # Pinned deliberately — an unpinned @latest here means a new firebase-tools
         # release can change deploy behavior with zero warning on an ordinary push
         # to main. Bump this version intentionally when you want the update.
-        run: npx firebase-tools@15.25.1 deploy --project "${{ vars.FIREBASE_PROJECT_ID }}" --only functions,hosting
+        run:
+          npx firebase-tools@15.25.1 deploy --project "${{
+          vars.FIREBASE_PROJECT_ID }}" --only functions,hosting

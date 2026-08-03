@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Fantasy Platform</title>
     <script defer src="/__/firebase/12.16.0/firebase-app-compat.js"></script>
     <script defer src="/__/firebase/12.16.0/firebase-auth-compat.js"></script>
@@ -10,8 +10,14 @@
     <style>
       :root {
         color-scheme: light;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
       }
 
       body {
@@ -129,12 +135,13 @@
 
       <section class="panel">
         <strong>API response</strong>
-        <pre id="output">Sign in to request /players with a Firebase ID token.</pre>
+        <pre id="output">
+Sign in to request /players with a Firebase ID token.</pre>
       </section>
     </main>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function() {
+      document.addEventListener("DOMContentLoaded", function () {
         const authStatus = document.querySelector("#auth-status");
         const userDetail = document.querySelector("#user-detail");
         const signInButton = document.querySelector("#sign-in");
@@ -147,18 +154,17 @@
         const projectId = app.options.projectId || "premier-league-af352";
         const localHosts = ["localhost", "127.0.0.1"];
         const isLocal = localHosts.includes(window.location.hostname);
-        const apiBaseUrl = isLocal ?
-          `http://${window.location.hostname}:5001/${projectId}/us-central1/api` :
-          `https://us-central1-${projectId}.cloudfunctions.net/api`;
+        const apiBaseUrl = isLocal
+          ? `http://${window.location.hostname}:5001/${projectId}/us-central1/api`
+          : `https://us-central1-${projectId}.cloudfunctions.net/api`;
 
         if (isLocal) {
           auth.useEmulator("http://127.0.0.1:9099");
         }
 
         const writeOutput = (value) => {
-          output.textContent = typeof value === "string" ?
-            value :
-            JSON.stringify(value, null, 2);
+          output.textContent =
+            typeof value === "string" ? value : JSON.stringify(value, null, 2);
         };
 
         auth.onAuthStateChanged((user) => {
@@ -166,12 +172,10 @@
           signInButton.disabled = signedIn;
           signOutButton.disabled = !signedIn;
           loadPlayersButton.disabled = !signedIn;
-          authStatus.textContent = signedIn ?
-            "Signed in" :
-            "Signed out";
-          userDetail.textContent = signedIn ?
-            `${user.displayName || "Firebase user"} • ${user.email || user.uid}` :
-            "";
+          authStatus.textContent = signedIn ? "Signed in" : "Signed out";
+          userDetail.textContent = signedIn
+            ? `${user.displayName || "Firebase user"} • ${user.email || user.uid}`
+            : "";
         });
 
         signInButton.addEventListener("click", async () => {
@@ -200,7 +204,7 @@
             const token = await user.getIdToken();
             const response = await fetch(`${apiBaseUrl}/players`, {
               headers: {
-                "Authorization": `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
               },
             });
             const data = await response.json();

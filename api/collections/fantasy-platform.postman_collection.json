@@ -42,14 +42,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/dev/auth/id-token",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "dev",
-                "auth",
-                "id-token"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["dev", "auth", "id-token"]
             },
             "description": "Local-only helper. Creates/signs in a Firebase Auth emulator user and stores the returned ID token in firebaseIdToken."
           },
@@ -67,12 +61,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
             },
             "description": "Liveness check that does not hit the database and does not require auth."
           },
@@ -100,12 +90,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/players",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "players"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["players"]
             },
             "description": "Returns non-removed players ordered by name. Requires a Firebase Auth ID token."
           },
@@ -128,13 +114,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/players/{{playerId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "players",
-                "{{playerId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["players", "{{playerId}}"]
             },
             "description": "Returns one visible player by database id. Requires a Firebase Auth ID token."
           },

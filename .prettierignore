@@ -1,0 +1,11 @@
+node_modules/
+functions/node_modules/
+functions/lib/
+.git/
+.firebase/
+coverage/
+firebase-debug.log
+firebase-debug.*.log
+package-lock.json
+functions/package-lock.json
+functions/.eslintrc.js
