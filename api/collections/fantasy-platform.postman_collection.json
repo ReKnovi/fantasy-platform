@@ -1,0 +1,196 @@
+{
+  "info": {
+    "_postman_id": "c49dc6ea-2239-41d2-bc8f-8506fdf42a7a",
+    "name": "Fantasy Platform API",
+    "description": "Firebase Functions / Express API collection for the Fantasy Platform backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Dev Auth",
+      "item": [
+        {
+          "name": "Get Firebase ID Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"token returned\", function () {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data.idToken).to.be.a(\"string\");",
+                  "  pm.collectionVariables.set(\"firebaseIdToken\", data.idToken);",
+                  "  pm.collectionVariables.set(\"playerId\", pm.collectionVariables.get(\"playerId\") || \"1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dev/auth/id-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dev",
+                "auth",
+                "id-token"
+              ]
+            },
+            "description": "Local-only helper. Creates/signs in a Firebase Auth emulator user and stores the returned ID token in firebaseIdToken."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Liveness check that does not hit the database and does not require auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Players",
+      "item": [
+        {
+          "name": "List Players",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{firebaseIdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/players",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "players"
+              ]
+            },
+            "description": "Returns non-removed players ordered by name. Requires a Firebase Auth ID token."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Player By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{firebaseIdToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/players/{{playerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "players",
+                "{{playerId}}"
+              ]
+            },
+            "description": "Returns one visible player by database id. Requires a Firebase Auth ID token."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"status is 2xx\", function () {",
+          "  pm.expect(pm.response.code).to.be.within(200, 299);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001/premier-league-af352/us-central1/api",
+      "type": "string"
+    },
+    {
+      "key": "plainHttpBaseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authEmulatorUrl",
+      "value": "http://127.0.0.1:9099",
+      "type": "string"
+    },
+    {
+      "key": "firebaseIdToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "authEmail",
+      "value": "postman@example.test",
+      "type": "string"
+    },
+    {
+      "key": "authPassword",
+      "value": "postman-password",
+      "type": "string"
+    },
+    {
+      "key": "playerId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

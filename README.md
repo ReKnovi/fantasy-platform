@@ -114,6 +114,7 @@ metrices and UI visualations available at:
 ```text
 http://127.0.0.1:5000/
 http://127.0.0.1:4000/
+http://127.0.0.1:9099/
 ```
 
 Run the Firebase Functions emulator:
@@ -144,31 +145,53 @@ http://localhost:8080
 
 ## API
 
+Importable client collections are available in
+[api/collections](api/collections):
+
+- [Postman collection](api/collections/fantasy-platform.postman_collection.json)
+- [Hoppscotch collection](api/collections/fantasy-platform.hoppscotch_collection.json)
+
 Health check:
 
 ```sh
 curl http://localhost:5001/premier-league-af352/us-central1/api/health
 ```
 
+Get a local Firebase Auth emulator ID token for API clients:
+
+```sh
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"email":"postman@example.test","password":"postman-password"}' \
+  http://localhost:5001/premier-league-af352/us-central1/api/dev/auth/id-token
+```
+
 Players list:
 
 ```sh
-curl http://localhost:5001/premier-league-af352/us-central1/api/players
+curl -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
+  http://localhost:5001/premier-league-af352/us-central1/api/players
 ```
 
 Single player:
 
 ```sh
-curl http://localhost:5001/premier-league-af352/us-central1/api/players/1
+curl -H "Authorization: Bearer $FIREBASE_ID_TOKEN" \
+  http://localhost:5001/premier-league-af352/us-central1/api/players/1
 ```
 
 Current endpoints:
 
-| Method | Path           | Description                                  |
-| ------ | -------------- | -------------------------------------------- |
-| `GET`  | `/health`      | Liveness check without DB access.            |
-| `GET`  | `/players`     | Returns non-removed players ordered by name. |
-| `GET`  | `/players/:id` | Returns one visible player by id.            |
+| Method | Path           | Auth         | Description                                  |
+| ------ | -------------- | ------------ | -------------------------------------------- |
+| `POST` | `/dev/auth/id-token` | None | Local-only helper that returns a Firebase Auth emulator ID token. |
+| `GET`  | `/health`      | None         | Liveness check without DB access.            |
+| `GET`  | `/players`     | Firebase JWT | Returns non-removed players ordered by name. |
+| `GET`  | `/players/:id` | Firebase JWT | Returns one visible player by id.            |
+
+Google sign-in is implemented in the hosted app. In local development the
+frontend connects to the Firebase Auth emulator at `127.0.0.1:9099`; protected
+API requests send the signed-in user's Firebase ID token as a bearer token.
 
 ## Quality Checks
 

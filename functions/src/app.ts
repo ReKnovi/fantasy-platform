@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import {playersRouter} from "./modules/players/players.routes";
+import {requireFirebaseAuth} from "./middleware/firebaseAuth";
+import {devAuthRouter} from "./modules/dev/devAuth.routes";
 
 export const app = express();
 
@@ -12,4 +14,5 @@ app.get("/health", (_req, res) => {
   res.json({status: "ok"});
 });
 
-app.use("/players", playersRouter);
+app.use("/dev/auth", devAuthRouter);
+app.use("/players", requireFirebaseAuth, playersRouter);

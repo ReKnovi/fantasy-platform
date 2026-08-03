@@ -19,6 +19,16 @@ const required = (key: string, fallback?: string): string => {
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
+  firebase: {
+    projectId: required("FIREBASE_PROJECT_ID", "premier-league-af352"),
+    authEmulatorHost: required(
+      "FIREBASE_AUTH_EMULATOR_HOST",
+      "127.0.0.1:9099"
+    ),
+    allowDevAuthEndpoint:
+      (process.env.NODE_ENV ?? "development") !== "production" &&
+      Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST ?? "127.0.0.1:9099"),
+  },
   db: {
     // If DATABASE_URL is set, it wins (this is what a Supabase/Neon pooled
     // connection string, or a Cloud SQL Auth Proxy tunnel during local

@@ -1,0 +1,118 @@
+{
+  "v": 1,
+  "name": "Fantasy Platform API",
+  "folders": [
+    {
+      "v": 1,
+      "name": "Dev Auth",
+      "folders": [],
+      "requests": [
+        {
+          "v": "1",
+          "name": "Get Firebase ID Token",
+          "method": "POST",
+          "endpoint": "<<baseUrl>>/dev/auth/id-token",
+          "params": [],
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "active": true
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"token returned\", () => { pw.expect(pw.response.body.idToken).toBeType(\"string\"); });",
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"email\": \"<<authEmail>>\",\n  \"password\": \"<<authPassword>>\"\n}"
+          }
+        }
+      ]
+    },
+    {
+      "v": 1,
+      "name": "Health",
+      "folders": [],
+      "requests": [
+        {
+          "v": "1",
+          "name": "Health Check",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/health",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"status is 2xx\", () => { pw.expect(pw.response.status).toBeGreaterThanOrEqual(200); pw.expect(pw.response.status).toBeLessThan(300); });",
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        }
+      ]
+    },
+    {
+      "v": 1,
+      "name": "Players",
+      "folders": [],
+      "requests": [
+        {
+          "v": "1",
+          "name": "List Players",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/players",
+          "params": [],
+          "headers": [
+            {
+              "key": "Authorization",
+              "value": "Bearer <<firebaseIdToken>>",
+              "active": true
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"status is 2xx\", () => { pw.expect(pw.response.status).toBeGreaterThanOrEqual(200); pw.expect(pw.response.status).toBeLessThan(300); });",
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "1",
+          "name": "Get Player By ID",
+          "method": "GET",
+          "endpoint": "<<baseUrl>>/players/<<playerId>>",
+          "params": [],
+          "headers": [
+            {
+              "key": "Authorization",
+              "value": "Bearer <<firebaseIdToken>>",
+              "active": true
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"status is 2xx\", () => { pw.expect(pw.response.status).toBeGreaterThanOrEqual(200); pw.expect(pw.response.status).toBeLessThan(300); });",
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        }
+      ]
+    }
+  ],
+  "requests": []
+}

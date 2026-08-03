@@ -1,5 +1,9 @@
 import {Pool} from "pg";
-import {AuthTypes, Connector, IpAddressTypes} from "@google-cloud/cloud-sql-connector";
+import {
+  AuthTypes,
+  Connector,
+  IpAddressTypes,
+} from "@google-cloud/cloud-sql-connector";
 import {env} from "../config/env";
 
 let connector: Connector | undefined;
@@ -65,6 +69,7 @@ async function createPool(): Promise<Pool> {
  * every request). Async, so every caller does
  * `const pool = await getPool();` rather than importing a ready-made
  * constant.
+ * @return {Promise<Pool>} Shared Postgres connection pool.
  */
 export function getPool(): Promise<Pool> {
   if (!poolPromise) {
