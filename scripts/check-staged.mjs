@@ -16,6 +16,9 @@ const ignoredPrefixes = [
   "functions/lib/",
 ];
 
+// Files that define secret patterns rather than contain actual secrets.
+const secretScanExclusions = new Set(["scripts/check-staged.mjs"]);
+
 const textExtensions = new Set([
   ".cjs",
   ".css",
@@ -146,7 +149,9 @@ for (const file of selectedFiles()) {
   if (!secretsOnly) {
     checkConflictMarkers(file, content, failures);
   }
-  checkSecrets(file, content, failures);
+  if (!secretScanExclusions.has(file)) {
+    checkSecrets(file, content, failures);
+  }
 }
 
 if (failures.length > 0) {

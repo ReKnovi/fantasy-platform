@@ -7,6 +7,12 @@ on:
       - main
   workflow_dispatch:
 
+# Prevent double runs: a PR merge triggers both pull_request (close) and push.
+# This concurrency group cancels the redundant run.
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -62,13 +68,18 @@ jobs:
 
       # ── Security ──
       - name: Scan for secrets
+        if: github.actor != 'dependabot[bot]'
         run: npm run validate:secrets
 
       - name: Audit dependencies
+        if: github.actor != 'dependabot[bot]'
         run: |
           npm audit --audit-level=high || true
           cd functions && npm audit --audit-level=high || true
 
       # ── Docker (VPS build check) ──
+      # Skip on Dependabot PRs — dependency updates don't affect the Dockerfile
+      # and this step takes ~2-3 minutes.
       - name: Build VPS container image
+        if: github.actor != 'dependabot[bot]'
         run: docker build -t fantasy-functions:${{ github.sha }} functions

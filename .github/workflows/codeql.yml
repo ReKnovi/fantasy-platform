@@ -6,8 +6,13 @@ on:
     branches:
       - main
   schedule:
+    # Weekly scan catches vulnerabilities in dependencies even without code changes.
     - cron: "31 2 * * 1"
   workflow_dispatch:
+
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -17,11 +22,11 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        language:
-          - javascript-typescript
+
+    # Skip Dependabot PRs — CodeQL analyzes code patterns, not dependency
+    # versions. The weekly schedule still catches new advisories. Saves ~3-5
+    # minutes per Dependabot PR.
+    if: github.actor != 'dependabot[bot]'
 
     steps:
       - name: Checkout
@@ -30,10 +35,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+          languages: javascript-typescript
 
       - name: Analyze
         uses: github/codeql-action/analyze@v3

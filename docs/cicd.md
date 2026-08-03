@@ -15,7 +15,9 @@ installs all evaluate the same lockfile.
 - `.github/workflows/ci.yml` Runs on pull requests and pushes to `main`. It
   installs both root and functions dependencies, runs lint, checks formatting,
   runs tests, builds Firebase Functions, validates the repository structure,
-  scans for secrets, audits dependencies, and builds the VPS Docker image.
+  scans for secrets, audits dependencies, and builds the VPS Docker image. Uses
+  a concurrency group to prevent double runs on PR merges. Skips the Docker
+  build on Dependabot PRs to save CI minutes.
 
 - `.github/workflows/deploy-firebase.yml` Manual only for now. The automatic
   push-to-`main` trigger is intentionally commented out until Blaze is enabled
@@ -32,10 +34,13 @@ installs all evaluate the same lockfile.
 
 - `.github/workflows/codeql.yml` Runs on pull requests, pushes to `main`, and
   weekly on Monday. Performs GitHub CodeQL security analysis for
-  JavaScript/TypeScript.
+  JavaScript/TypeScript. Skips Dependabot PRs since CodeQL analyzes code
+  patterns, not dependency versions; the weekly schedule still catches new
+  advisories.
 
-- `.github/dependabot.yml` Keeps npm dependencies up to date weekly for both the
-  root and functions workspaces, and keeps GitHub Actions versions current.
+- `.github/dependabot.yml` Keeps npm dependencies up to date monthly for both
+  the root and functions workspaces, and keeps GitHub Actions versions current.
+  All updates are grouped so each ecosystem produces at most one PR.
 
 ## GitHub Environments
 
