@@ -16,7 +16,6 @@ const defaultEmail = "postman@example.test";
 const defaultPassword = "postman-password";
 const apiKey = "local-emulator";
 
-// eslint-disable-next-line new-cap
 export const devAuthRouter = Router();
 
 const authEmulatorOrigin = (): string => {

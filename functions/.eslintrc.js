@@ -26,5 +26,10 @@ module.exports = {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
     "indent": ["error", 2],
+    // Express's Router() is a factory function, not a constructor — this
+    // rule can't tell the difference from the capital letter alone, so
+    // without this it'd force `new Router()` (wrong) or a
+    // disable-comment on every routes file that calls Router().
+    "new-cap": ["error", {"capIsNewExceptions": ["Router"]}],
   },
 };

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
+    "emulators": "firebase emulators:start --export-on-exit=./.emulator-data --import=./.emulator-data",
     "lint": "npm --prefix functions run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

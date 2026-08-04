@@ -102,18 +102,37 @@ npm ci
 
 ## Run Locally
 
-Run the Firebase all emulator:
+Two processes need to run together — one recompiles TypeScript on save, the
+other runs the emulators.
+
+**Terminal 1** — auto-rebuild on save:
 
 ```sh
-firebase emulators:start
+cd functions && npm run build:watch
 ```
 
-metrices and UI visualations available at:
+**Terminal 2** — start all emulators (Functions, Hosting, Auth, UI), with Auth
+users and other emulator data persisted across restarts:
 
-```text
-http://127.0.0.1:5000/
-http://127.0.0.1:4000/
-http://127.0.0.1:9099/
+```sh
+npm run emulators
+```
+
+Metrics and UI visualizations available at:
+
+| Service                                                      | URL                                                        |
+| ------------------------------------------------------------ | ---------------------------------------------------------- |
+| Emulator Suite UI (logs, Auth users, etc.)                   | http://127.0.0.1:4000/                                     |
+| Hosting                                                      | http://127.0.0.1:5000/                                     |
+| Functions API base                                           | http://127.0.0.1:5001/premier-league-af352/us-central1/api |
+| Auth emulator (used internally, not usually opened directly) | http://127.0.0.1:9099/                                     |
+
+To call a protected endpoint locally without a real Google sign-in, get a test
+token from the dev-only helper first (disabled outside emulator/dev):
+
+```sh
+curl -X POST http://127.0.0.1:5001/premier-league-af352/us-central1/api/dev/auth/id-token \
+  -H "Content-Type: application/json" -d '{}'
 ```
 
 Run the Firebase Functions emulator:
