@@ -9,6 +9,10 @@ import * as path from "path";
   dotenv.config({path: envFile});
 });
 
+if (process.env.NODE_ENV !== "production") {
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+}
+
 const required = (key: string, fallback?: string): string => {
   const value = process.env[key] ?? fallback;
   if (value === undefined) {
@@ -21,10 +25,12 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   firebase: {
     projectId: required("FIREBASE_PROJECT_ID", "premier-league-af352"),
+
     authEmulatorHost: required("FIREBASE_AUTH_EMULATOR_HOST", "127.0.0.1:9099"),
+
     allowDevAuthEndpoint:
       (process.env.NODE_ENV ?? "development") !== "production" &&
-      Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST ?? "127.0.0.1:9099"),
+      Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST),
   },
   db: {
     // If DATABASE_URL is set, it wins (this is what a Supabase/Neon pooled

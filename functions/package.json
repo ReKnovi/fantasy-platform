@@ -8,6 +8,7 @@
     "ci": "npm run lint && npm run test && npm run build",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
+    "dev": "npm run build && firebase emulators:start --inspect-functions --only functions",
     "serve:http": "npm run build && node lib/server.js",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",

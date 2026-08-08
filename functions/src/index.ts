@@ -11,7 +11,7 @@ setGlobalOptions({maxInstances: 10});
 // actually injects them into process.env at runtime; creating the secret
 // alone does not. Harmless locally/in the emulator — nothing here touches
 // Secret Manager until the function is actually deployed.
-const instanceConnectionName = defineSecret("INSTANCE_CONNECTION_NAME");
+// const instanceConnectionName = defineSecret("INSTANCE_CONNECTION_NAME");
 const dbUser = defineSecret("DB_USER");
 const dbPassword = defineSecret("DB_PASSWORD");
 const dbName = defineSecret("DB_NAME");
@@ -20,6 +20,7 @@ const dbName = defineSecret("DB_NAME");
 // (auth, squads, transfers, scoring...) get built out, mount each one's
 // router here the same way `playersRouter` is mounted.
 export const api = onRequest(
-  {secrets: [instanceConnectionName, dbUser, dbPassword, dbName]},
+  // {secrets: [instanceConnectionName, dbUser, dbPassword, dbName]},
+  {secrets: [dbUser, dbPassword, dbName]},
   app
 );

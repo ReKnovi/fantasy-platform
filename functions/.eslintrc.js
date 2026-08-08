@@ -1,9 +1,11 @@
 module.exports = {
   root: true,
+
   env: {
     es6: true,
     node: true,
   },
+
   extends: [
     "eslint:recommended",
     "plugin:import/errors",
@@ -12,24 +14,43 @@ module.exports = {
     "google",
     "plugin:@typescript-eslint/recommended",
   ],
+
   parser: "@typescript-eslint/parser",
+
   parserOptions: {
-    project: ["tsconfig.json", "tsconfig.dev.json"],
+    project: [
+      "./tsconfig.json",
+      "./tsconfig.dev.json",
+    ],
+    tsconfigRootDir: __dirname,
     sourceType: "module",
   },
+
   ignorePatterns: [
-    "/lib/**/*", // Ignore built files.
-    "/generated/**/*", // Ignore generated files.
+    "/lib/**/*",
+    "/generated/**/*",
   ],
+
   plugins: ["@typescript-eslint", "import"],
+
   rules: {
     "quotes": ["error", "double"],
-    "import/no-unresolved": 0,
+
+    "import/no-unresolved": "off",
+
+    // TypeScript provides type information, so JSDoc type annotations
+    // are unnecessary and Google's JSDoc rules can conflict with TS syntax.
+    "require-jsdoc": "off",
+    "valid-jsdoc": "off",
+
     "indent": ["error", 2],
-    // Express's Router() is a factory function, not a constructor — this
-    // rule can't tell the difference from the capital letter alone, so
-    // without this it'd force `new Router()` (wrong) or a
-    // disable-comment on every routes file that calls Router().
-    "new-cap": ["error", {"capIsNewExceptions": ["Router"]}],
+
+    // Express Router() is a factory function, not a constructor.
+    "new-cap": [
+      "error",
+      {
+        "capIsNewExceptions": ["Router"],
+      },
+    ],
   },
 };

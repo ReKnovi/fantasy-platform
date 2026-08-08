@@ -101,3 +101,6 @@ Desktop.ini
 dataconnect/
 src/dataconnect-generated/
 .dataconnect
+
+docs/fantasy-platform-firebase-production-deployment-runbook.md
+docs/NPL_Fantasy_Final_Revised_Schema.sql

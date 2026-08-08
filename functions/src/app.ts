@@ -4,6 +4,9 @@ import {playersRouter} from "./modules/players/players.routes";
 import {requireFirebaseAuth} from "./middleware/firebaseAuth";
 import {devAuthRouter} from "./modules/dev/devAuth.routes";
 import {usersRouter} from "./modules/users/users.routes";
+import {realTeamsRouter} from "./modules/realTeams/realTeams.routes";
+import {gameweeksRouter} from "./modules/gameweeks/gameweeks.routes";
+import {matchesRouter} from "./modules/matches/matches.routes";
 
 export const app = express();
 
@@ -18,3 +21,6 @@ app.get("/health", (_req, res) => {
 app.use("/dev/auth", devAuthRouter);
 app.use("/players", requireFirebaseAuth, playersRouter);
 app.use("/users", usersRouter);
+app.use("/real-teams", requireFirebaseAuth, realTeamsRouter);
+app.use("/gameweeks", requireFirebaseAuth, gameweeksRouter);
+app.use("/matches", requireFirebaseAuth, matchesRouter);
