@@ -2,6 +2,7 @@ import {NextFunction, Request, Response} from "express";
 import {getAuth} from "firebase-admin/auth";
 import {getApps, initializeApp} from "firebase-admin/app";
 import {env} from "../config/env";
+import {unauthorized} from "../errors/errors";
 
 if (getApps().length === 0) {
   initializeApp({projectId: env.firebase.projectId});
@@ -24,21 +25,24 @@ export async function requireFirebaseAuth(
   const authorization = req.header("authorization") ?? "";
 
   if (!authorization.startsWith(bearerPrefix)) {
-    res.status(401).json({error: "Missing Firebase ID token"});
+    next(unauthorized("Missing Firebase ID token"));
     return;
   }
 
   const token = authorization.slice(bearerPrefix.length).trim();
+
   if (!token) {
-    res.status(401).json({error: "Missing Firebase ID token"});
+    next(unauthorized("Missing Firebase ID token"));
     return;
   }
 
   try {
     res.locals.firebaseUser = await getAuth().verifyIdToken(token);
+
     next();
   } catch (err) {
     console.error("Firebase auth verification failed", err);
-    res.status(401).json({error: "Invalid Firebase ID token"});
+
+    next(unauthorized("Invalid Firebase ID token"));
   }
 }

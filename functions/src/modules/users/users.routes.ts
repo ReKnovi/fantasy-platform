@@ -1,6 +1,7 @@
 import {Router, Request, Response} from "express";
 import {requireFirebaseAuth} from "../../middleware/firebaseAuth";
 import {findOrCreateUser} from "./users.service";
+import {asyncHandler} from "../../middleware/asyncHandler";
 
 export const usersRouter = Router();
 
@@ -14,13 +15,8 @@ export const usersRouter = Router();
 usersRouter.get(
   "/me",
   requireFirebaseAuth,
-  async (req: Request, res: Response) => {
-    try {
-      const user = await findOrCreateUser(res.locals.firebaseUser);
-      res.json({data: user});
-    } catch (err) {
-      console.error("GET /users/me failed", err);
-      res.status(500).json({error: "Failed to load user profile"});
-    }
-  }
+  asyncHandler(async (req: Request, res: Response) => {
+    const user = await findOrCreateUser(res.locals.firebaseUser);
+    res.json({data: user});
+  })
 );

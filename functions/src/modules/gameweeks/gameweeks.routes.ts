@@ -7,93 +7,74 @@ import {
   scheduleGameweek,
   updateGameweekStatus,
 } from "./gameweeks.service";
+import {asyncHandler} from "../../middleware/asyncHandler";
+import {badRequest, notFound} from "../../errors/errors";
 
 export const gameweeksRouter = Router();
 
 // GET /gameweeks — full season list.
-gameweeksRouter.get("/", async (_req: Request, res: Response) => {
-  try {
+gameweeksRouter.get(
+  "/",
+  asyncHandler(async (_req: Request, res: Response) => {
     const gameweeks = await getAllGameweeks();
     res.json({data: gameweeks});
-  } catch (err) {
-    console.error("GET /gameweeks failed", err);
-    res.status(500).json({error: "Failed to fetch gameweeks"});
-  }
-});
+  })
+);
 
 // GET /gameweeks/current — the gameweek the app should treat as "active"
 // right now. Must be registered before the /:id route below, or Express
 // will try to parse "current" as a numeric id and 400.
-gameweeksRouter.get("/current", async (_req: Request, res: Response) => {
-  try {
+gameweeksRouter.get(
+  "/current",
+  asyncHandler(async (_req: Request, res: Response) => {
     const gameweek = await getCurrentGameweek();
     if (!gameweek) {
-      res.status(404).json({error: "No current gameweek"});
-      return;
+      throw notFound("No current gameweek");
     }
     res.json({data: gameweek});
-  } catch (err) {
-    console.error("GET /gameweeks/current failed", err);
-    res.status(500).json({error: "Failed to fetch current gameweek"});
-  }
-});
+  })
+);
 
 // GET /gameweeks/:id
-gameweeksRouter.get("/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    res.status(400).json({error: "Invalid gameweek id"});
-    return;
-  }
+gameweeksRouter.get(
+  "/:id",
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      throw badRequest("Invalid gameweek id");
+    }
 
-  try {
     const gameweek = await getGameweekById(id);
     if (!gameweek) {
-      res.status(404).json({error: "Gameweek not found"});
-      return;
+      throw notFound("Gameweek not found");
     }
     res.json({data: gameweek});
-  } catch (err) {
-    console.error(`GET /gameweeks/${id} failed`, err);
-    res.status(500).json({error: "Failed to fetch gameweek"});
-  }
-});
+  })
+);
 
 // POST /gameweeks — roster_admin/super_admin only.
 gameweeksRouter.post(
   "/",
   requireRole("roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const {label, phase, deadlineTime} = req.body ?? {};
 
     if (typeof label !== "string" || label.trim().length === 0) {
-      res.status(400).json({error: "label is required"});
-      return;
+      throw badRequest("label is required");
     }
     if (phase !== "group_stage" && phase !== "playoffs") {
-      res
-        .status(400)
-        .json({error: "phase must be 'group_stage' or 'playoffs'"});
-      return;
+      throw badRequest("phase must be 'group_stage' or 'playoffs'");
     }
     if (
       typeof deadlineTime !== "string" ||
       Number.isNaN(Date.parse(deadlineTime))
     ) {
-      res
-        .status(400)
-        .json({error: "deadlineTime must be a valid ISO timestamp"});
-      return;
+      throw badRequest("deadlineTime must be a valid ISO timestamp");
     }
 
-    try {
-      const gameweek = await scheduleGameweek({label, phase, deadlineTime});
-      res.status(201).json({data: gameweek});
-    } catch (err) {
-      console.error("POST /gameweeks failed", err);
-      res.status(500).json({error: "Failed to create gameweek"});
-    }
-  }
+    const gameweek = await scheduleGameweek({label, phase, deadlineTime});
+    res.status(201).json({data: gameweek});
+  })
 );
 
 // PATCH /gameweeks/:id — roster_admin/super_admin only. Flips
@@ -103,33 +84,24 @@ gameweeksRouter.post(
 gameweeksRouter.patch(
   "/:id",
   requireRole("roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const {finished, dataChecked} = req.body ?? {};
 
     if (Number.isNaN(id)) {
-      res.status(400).json({error: "Invalid gameweek id"});
-      return;
+      throw badRequest("Invalid gameweek id");
     }
     if (finished !== undefined && typeof finished !== "boolean") {
-      res.status(400).json({error: "finished must be a boolean"});
-      return;
+      throw badRequest("finished must be a boolean");
     }
     if (dataChecked !== undefined && typeof dataChecked !== "boolean") {
-      res.status(400).json({error: "dataChecked must be a boolean"});
-      return;
+      throw badRequest("dataChecked must be a boolean");
     }
 
-    try {
-      const gameweek = await updateGameweekStatus(id, {finished, dataChecked});
-      if (!gameweek) {
-        res.status(404).json({error: "Gameweek not found"});
-        return;
-      }
-      res.json({data: gameweek});
-    } catch (err) {
-      console.error(`PATCH /gameweeks/${id} failed`, err);
-      res.status(500).json({error: "Failed to update gameweek"});
+    const gameweek = await updateGameweekStatus(id, {finished, dataChecked});
+    if (!gameweek) {
+      throw notFound("Gameweek not found");
     }
-  }
+    res.json({data: gameweek});
+  })
 );

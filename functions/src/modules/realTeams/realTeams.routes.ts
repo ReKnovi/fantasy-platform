@@ -6,61 +6,51 @@ import {
   registerRealTeam,
   setRealTeamStatus,
 } from "./realTeams.service";
+import {asyncHandler} from "../../middleware/asyncHandler";
+import {badRequest, notFound} from "../../errors/errors";
 
 export const realTeamsRouter = Router();
 
 // GET /real-teams — any authenticated user (mounted behind
 // requireFirebaseAuth in app.ts).
-realTeamsRouter.get("/", async (_req: Request, res: Response) => {
-  try {
+realTeamsRouter.get(
+  "/",
+  asyncHandler(async (_req: Request, res: Response) => {
     const teams = await getAllRealTeams();
     res.json({data: teams});
-  } catch (err) {
-    console.error("GET /real-teams failed", err);
-    res.status(500).json({error: "Failed to fetch real teams"});
-  }
-});
+  })
+);
 
 // GET /real-teams/:id
-realTeamsRouter.get("/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    res.status(400).json({error: "Invalid team id"});
-    return;
-  }
+realTeamsRouter.get(
+  "/:id",
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      throw badRequest("Invalid team id");
+    }
 
-  try {
     const team = await getRealTeamById(id);
     if (!team) {
-      res.status(404).json({error: "Team not found"});
-      return;
+      throw notFound("Team not found");
     }
     res.json({data: team});
-  } catch (err) {
-    console.error(`GET /real-teams/${id} failed`, err);
-    res.status(500).json({error: "Failed to fetch team"});
-  }
-});
+  })
+);
 
 // POST /real-teams — roster_admin/super_admin only.
 realTeamsRouter.post(
   "/",
   requireRole("roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const {name, shortName} = req.body ?? {};
     if (typeof name !== "string" || name.trim().length === 0) {
-      res.status(400).json({error: "name is required"});
-      return;
+      throw badRequest("name is required");
     }
 
-    try {
-      const team = await registerRealTeam({name, shortName});
-      res.status(201).json({data: team});
-    } catch (err) {
-      console.error("POST /real-teams failed", err);
-      res.status(500).json({error: "Failed to create team"});
-    }
-  }
+    const team = await registerRealTeam({name, shortName});
+    res.status(201).json({data: team});
+  })
 );
 
 // PATCH /real-teams/:id/status — roster_admin/super_admin only.
@@ -69,29 +59,21 @@ realTeamsRouter.post(
 realTeamsRouter.patch(
   "/:id/status",
   requireRole("roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const {status} = req.body ?? {};
 
     if (Number.isNaN(id)) {
-      res.status(400).json({error: "Invalid team id"});
-      return;
+      throw badRequest("Invalid team id");
     }
     if (status !== "active" && status !== "eliminated") {
-      res.status(400).json({error: "status must be 'active' or 'eliminated'"});
-      return;
+      throw badRequest("status must be 'active' or 'eliminated'");
     }
 
-    try {
-      const team = await setRealTeamStatus(id, status);
-      if (!team) {
-        res.status(404).json({error: "Team not found"});
-        return;
-      }
-      res.json({data: team});
-    } catch (err) {
-      console.error(`PATCH /real-teams/${id}/status failed`, err);
-      res.status(500).json({error: "Failed to update team status"});
+    const team = await setRealTeamStatus(id, status);
+    if (!team) {
+      throw notFound("Team not found");
     }
-  }
+    res.json({data: team});
+  })
 );

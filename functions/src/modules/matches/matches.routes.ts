@@ -9,6 +9,8 @@ import {
   scheduleMatch,
 } from "./matches.service";
 import {MatchStatus, WinMarginType} from "./matches.repository";
+import {asyncHandler} from "../../middleware/asyncHandler";
+import {badRequest, notFound} from "../../errors/errors";
 
 export const matchesRouter = Router();
 
@@ -30,42 +32,35 @@ const VALID_MARGIN_TYPES: WinMarginType[] = [
 // there's no "all matches" endpoint since that list only grows and every
 // real caller (fixtures view, admin match picker) is already scoped to a
 // gameweek.
-matchesRouter.get("/", async (req: Request, res: Response) => {
-  const gameweekId = Number(req.query.gameweekId);
-  if (Number.isNaN(gameweekId)) {
-    res.status(400).json({error: "gameweekId query param is required"});
-    return;
-  }
+matchesRouter.get(
+  "/",
+  asyncHandler(async (req: Request, res: Response) => {
+    const gameweekId = Number(req.query.gameweekId);
+    if (Number.isNaN(gameweekId)) {
+      throw badRequest("gameweekId query param is required");
+    }
 
-  try {
     const matches = await getMatchesByGameweek(gameweekId);
     res.json({data: matches});
-  } catch (err) {
-    console.error("GET /matches failed", err);
-    res.status(500).json({error: "Failed to fetch matches"});
-  }
-});
+  })
+);
 
 // GET /matches/:id
-matchesRouter.get("/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    res.status(400).json({error: "Invalid match id"});
-    return;
-  }
+matchesRouter.get(
+  "/:id",
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      throw badRequest("Invalid match id");
+    }
 
-  try {
     const match = await getMatchById(id);
     if (!match) {
-      res.status(404).json({error: "Match not found"});
-      return;
+      throw notFound("Match not found");
     }
     res.json({data: match});
-  } catch (err) {
-    console.error(`GET /matches/${id} failed`, err);
-    res.status(500).json({error: "Failed to fetch match"});
-  }
-});
+  })
+);
 
 // POST /matches — fixture scheduling is a roster/schedule concern, not a
 // match-day scoring concern, so this is scoped to roster_admin/super_admin
@@ -73,35 +68,28 @@ matchesRouter.get("/:id", async (req: Request, res: Response) => {
 matchesRouter.post(
   "/",
   requireRole("roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const {gameweekId, teamAId, teamBId, matchDate, venue} = req.body ?? {};
 
     if (teamAId === undefined || teamBId === undefined) {
-      res.status(400).json({error: "teamAId and teamBId are required"});
-      return;
+      throw badRequest("teamAId and teamBId are required");
     }
     if (typeof matchDate !== "string" || Number.isNaN(Date.parse(matchDate))) {
-      res.status(400).json({error: "matchDate must be a valid ISO timestamp"});
-      return;
+      throw badRequest("matchDate must be a valid ISO timestamp");
+    }
+    if (Number(teamAId) === Number(teamBId)) {
+      throw badRequest("A team cannot play itself");
     }
 
-    try {
-      const match = await scheduleMatch({
-        gameweekId: gameweekId !== undefined ? Number(gameweekId) : undefined,
-        teamAId: Number(teamAId),
-        teamBId: Number(teamBId),
-        matchDate,
-        venue,
-      });
-      res.status(201).json({data: match});
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to create match";
-      const status = message === "A team cannot play itself" ? 400 : 500;
-      if (status === 500) console.error("POST /matches failed", err);
-      res.status(status).json({error: message});
-    }
-  }
+    const match = await scheduleMatch({
+      gameweekId: gameweekId !== undefined ? Number(gameweekId) : undefined,
+      teamAId: Number(teamAId),
+      teamBId: Number(teamBId),
+      matchDate,
+      venue,
+    });
+    res.status(201).json({data: match});
+  })
 );
 
 // PATCH /matches/:id/toss — captured at/around the toss, per the
@@ -110,27 +98,20 @@ matchesRouter.post(
 matchesRouter.patch(
   "/:id/toss",
   requireRole("scorer_admin", "roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const tossWinnerId = Number(req.body?.tossWinnerId);
 
     if (Number.isNaN(id) || Number.isNaN(tossWinnerId)) {
-      res.status(400).json({error: "Invalid match id or tossWinnerId"});
-      return;
+      throw badRequest("Invalid match id or tossWinnerId");
     }
 
-    try {
-      const match = await recordTossWinner(id, tossWinnerId);
-      if (!match) {
-        res.status(404).json({error: "Match not found"});
-        return;
-      }
-      res.json({data: match});
-    } catch (err) {
-      console.error(`PATCH /matches/${id}/toss failed`, err);
-      res.status(500).json({error: "Failed to record toss winner"});
+    const match = await recordTossWinner(id, tossWinnerId);
+    if (!match) {
+      throw notFound("Match not found");
     }
-  }
+    res.json({data: match});
+  })
 );
 
 // PATCH /matches/:id/result — draft result entry, NOT published yet. See
@@ -138,7 +119,7 @@ matchesRouter.patch(
 matchesRouter.patch(
   "/:id/result",
   requireRole("scorer_admin", "roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     const {
       matchStatus,
@@ -149,45 +130,36 @@ matchesRouter.patch(
     } = req.body ?? {};
 
     if (Number.isNaN(id)) {
-      res.status(400).json({error: "Invalid match id"});
-      return;
+      throw badRequest("Invalid match id");
     }
     if (!VALID_MATCH_STATUSES.includes(matchStatus)) {
-      res.status(400).json({
-        error: `matchStatus must be one of: ${VALID_MATCH_STATUSES.join(", ")}`,
-      });
-      return;
+      throw badRequest(
+        `matchStatus must be one of: ${VALID_MATCH_STATUSES.join(", ")}`
+      );
     }
     if (
       winMarginType !== undefined &&
       !VALID_MARGIN_TYPES.includes(winMarginType)
     ) {
-      res.status(400).json({
-        error: `winMarginType must be one of: ${VALID_MARGIN_TYPES.join(", ")}`,
-      });
-      return;
+      throw badRequest(
+        `winMarginType must be one of: ${VALID_MARGIN_TYPES.join(", ")}`
+      );
     }
 
-    try {
-      const match = await saveMatchResultDraft(id, {
-        matchStatus,
-        winnerTeamId:
-          winnerTeamId !== undefined ? Number(winnerTeamId) : undefined,
-        winMargin: winMargin !== undefined ? Number(winMargin) : undefined,
-        winMarginType,
-        playerOfMatchId:
-          playerOfMatchId !== undefined ? Number(playerOfMatchId) : undefined,
-      });
-      if (!match) {
-        res.status(404).json({error: "Match not found"});
-        return;
-      }
-      res.json({data: match});
-    } catch (err) {
-      console.error(`PATCH /matches/${id}/result failed`, err);
-      res.status(500).json({error: "Failed to save match result"});
+    const match = await saveMatchResultDraft(id, {
+      matchStatus,
+      winnerTeamId:
+        winnerTeamId !== undefined ? Number(winnerTeamId) : undefined,
+      winMargin: winMargin !== undefined ? Number(winMargin) : undefined,
+      winMarginType,
+      playerOfMatchId:
+        playerOfMatchId !== undefined ? Number(playerOfMatchId) : undefined,
+    });
+    if (!match) {
+      throw notFound("Match not found");
     }
-  }
+    res.json({data: match});
+  })
 );
 
 // POST /matches/:id/publish — makes the result live. Deliberately a
@@ -197,23 +169,16 @@ matchesRouter.patch(
 matchesRouter.post(
   "/:id/publish",
   requireRole("scorer_admin", "roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) {
-      res.status(400).json({error: "Invalid match id"});
-      return;
+      throw badRequest("Invalid match id");
     }
 
-    try {
-      const match = await publishMatchResult(id);
-      if (!match) {
-        res.status(404).json({error: "Match not found"});
-        return;
-      }
-      res.json({data: match});
-    } catch (err) {
-      console.error(`POST /matches/${id}/publish failed`, err);
-      res.status(500).json({error: "Failed to publish match"});
+    const match = await publishMatchResult(id);
+    if (!match) {
+      throw notFound("Match not found");
     }
-  }
+    res.json({data: match});
+  })
 );

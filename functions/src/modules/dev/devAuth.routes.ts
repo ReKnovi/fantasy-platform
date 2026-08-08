@@ -1,5 +1,7 @@
 import {Router, Request, Response} from "express";
 import {env} from "../../config/env";
+import {asyncHandler} from "../../middleware/asyncHandler";
+import {badRequest, notFound} from "../../errors/errors";
 
 interface EmulatorAuthResponse {
   idToken?: string;
@@ -45,7 +47,7 @@ const authRequest = async (
   const data = (await response.json()) as EmulatorAuthResponse;
 
   if (!response.ok) {
-    throw new Error(data.error?.message ?? "Firebase Auth emulator failed");
+    throw badRequest(data.error?.message ?? "Firebase Auth emulator failed");
   }
 
   return data;
@@ -57,16 +59,16 @@ const authRequest = async (
  * Local-only helper for API clients. Creates a Firebase Auth emulator user
  * when needed, signs in, and returns an ID token for protected API requests.
  */
-devAuthRouter.post("/id-token", async (req: Request, res: Response) => {
-  if (!env.firebase.allowDevAuthEndpoint) {
-    res.status(404).json({error: "Not found"});
-    return;
-  }
+devAuthRouter.post(
+  "/id-token",
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!env.firebase.allowDevAuthEndpoint) {
+      throw notFound("Not found");
+    }
 
-  const email = String(req.body.email ?? defaultEmail);
-  const password = String(req.body.password ?? defaultPassword);
+    const email = String(req.body.email ?? defaultEmail);
+    const password = String(req.body.password ?? defaultPassword);
 
-  try {
     let result: EmulatorAuthResponse;
     try {
       result = await authRequest("signUp", email, password);
@@ -84,8 +86,5 @@ devAuthRouter.post("/id-token", async (req: Request, res: Response) => {
       refreshToken: result.refreshToken,
       expiresIn: result.expiresIn,
     });
-  } catch (err) {
-    console.error("Dev auth token request failed", err);
-    res.status(500).json({error: "Failed to create Firebase ID token"});
-  }
-});
+  })
+);

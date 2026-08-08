@@ -1,6 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {findOrCreateUser} from "../modules/users/users.service";
 import {UserRow} from "../modules/users/users.repository";
+import {forbidden, unauthorized} from "../errors/errors";
 
 /**
  * Requires the authenticated user's role to be one of the allowed roles.
@@ -16,9 +17,7 @@ export function requireRole(...allowedRoles: UserRow["role"][]) {
     const firebaseUser = res.locals.firebaseUser;
 
     if (!firebaseUser) {
-      // Guards against mounting requireRole without requireFirebaseAuth
-      // ahead of it — fail closed rather than silently allowing through.
-      res.status(401).json({error: "Missing authenticated user"});
+      next(unauthorized("Missing authenticated user"));
       return;
     }
 
@@ -26,15 +25,14 @@ export function requireRole(...allowedRoles: UserRow["role"][]) {
       const appUser = await findOrCreateUser(firebaseUser);
 
       if (!allowedRoles.includes(appUser.role)) {
-        res.status(403).json({error: "Insufficient role"});
+        next(forbidden("Insufficient role"));
         return;
       }
 
       res.locals.appUser = appUser;
       next();
     } catch (err) {
-      console.error("Role check failed", err);
-      res.status(500).json({error: "Failed to verify role"});
+      next(err);
     }
   };
 }
