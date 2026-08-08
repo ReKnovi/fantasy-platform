@@ -1,4 +1,4 @@
-import {Pool} from "pg";
+import {Pool, PoolClient} from "pg";
 import {
   AuthTypes,
   Connector,
@@ -83,6 +83,35 @@ export function getPool(): Promise<Pool> {
     });
   }
   return poolPromise;
+}
+
+/**
+ * Runs `fn` inside a BEGIN/COMMIT block on a single dedicated client,
+ * rolling back on any thrown error. Use this whenever a single logical
+ * admin action needs to write to more than one table/row atomically (e.g.
+ * publishing a match also stamps every one of its player_match_stats
+ * rows, or a bulk scorecard upsert should land as all-or-nothing) — plain
+ * sequential pool.query() calls each borrow their own connection and
+ * can't be rolled back together.
+ * @param {(client: PoolClient) => Promise<T>} fn Work to run transactionally.
+ * @return {Promise<T>} Whatever `fn` returns.
+ */
+export async function withTransaction<T>(
+  fn: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const pool = await getPool();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 /**

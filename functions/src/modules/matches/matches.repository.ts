@@ -1,4 +1,4 @@
-import {getPool} from "../../database/pool";
+import {getPool, withTransaction} from "../../database/pool";
 
 export type MatchStatus =
   "scheduled" | "completed" | "no_result" | "abandoned" | "dls_adjusted";
@@ -174,22 +174,34 @@ export async function recordMatchResult(
 /**
  * Publishes a match's result, gating scoring visibility per
  * matches.published (the authoritative match-level publication gate —
- * see the combined schema doc's final-schema notes, #3). Does NOT itself
- * trigger the scoring engine — that's scoringJob's job, listening for
- * this transition; keeping this repository function free of side effects
- * outside its own table is deliberate, not an oversight.
+ * see the combined schema doc's final-schema notes, #3). Also stamps
+ * every player_match_stats row for this match as published, in the same
+ * transaction — that field is audit-granularity only and never
+ * independently gates scoring, but it should still reflect reality once
+ * the match-level gate flips. Does NOT itself trigger the scoring engine
+ * — that's scoringJob's job, listening for this transition.
  * @param {number} id matches.id.
  */
 export async function publishMatch(id: number): Promise<MatchRow | null> {
-  const pool = await getPool();
-  const result = await pool.query<MatchRow>(
-    `UPDATE matches SET published = true, published_at = now()
-     WHERE id = $1
-     RETURNING id, gameweek_id, team_a_id, team_b_id, match_date, venue,
-               match_status, toss_winner_id, player_of_match_id,
-               winner_team_id, win_margin, win_margin_type,
-               published, published_at`,
-    [id]
-  );
-  return result.rows[0] ?? null;
+  return withTransaction(async (client) => {
+    const matchResult = await client.query<MatchRow>(
+      `UPDATE matches SET published = true, published_at = now()
+       WHERE id = $1
+       RETURNING id, gameweek_id, team_a_id, team_b_id, match_date, venue,
+                 match_status, toss_winner_id, player_of_match_id,
+                 winner_team_id, win_margin, win_margin_type,
+                 published, published_at`,
+      [id]
+    );
+    const match = matchResult.rows[0] ?? null;
+    if (!match) return null;
+
+    await client.query(
+      `UPDATE player_match_stats SET published = true, published_at = now()
+       WHERE match_id = $1`,
+      [id]
+    );
+
+    return match;
+  });
 }
