@@ -30,14 +30,16 @@ function parseStatsInput(raw: unknown): PlayerMatchStatsInput | null {
       typeof entry.ballsFaced === "number" ? entry.ballsFaced : undefined,
     fours: typeof entry.fours === "number" ? entry.fours : undefined,
     sixes: typeof entry.sixes === "number" ? entry.sixes : undefined,
+    /* eslint-disable operator-linebreak */
     isBattingDismissal:
-      typeof entry.isBattingDismissal === "boolean" ?
-        entry.isBattingDismissal :
-        undefined,
+      typeof entry.isBattingDismissal === "boolean"
+        ? entry.isBattingDismissal
+        : undefined,
     legalBallsBowled:
-      typeof entry.legalBallsBowled === "number" ?
-        entry.legalBallsBowled :
-        undefined,
+      typeof entry.legalBallsBowled === "number"
+        ? entry.legalBallsBowled
+        : undefined,
+    /* eslint-enable operator-linebreak */
     runsConceded:
       typeof entry.runsConceded === "number" ? entry.runsConceded : undefined,
     wickets: typeof entry.wickets === "number" ? entry.wickets : undefined,
