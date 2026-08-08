@@ -64,17 +64,14 @@ DB_PASSWORD=pass123
 Create the local database and user if they do not already exist. The app expects
 the `fantasy_user` role to be able to create tables in the `public` schema.
 
-Example migration command:
+dbmate reads its config from `database/.env.dbmate`, not the root `.env` — make
+sure `DATABASE_URL`, `DBMATE_MIGRATIONS_DIR`, and `DBMATE_SCHEMA_FILE` are set
+there (see `database/.env.dbmate` for the expected values).
+
+Run migrations:
 
 ```sh
-dbmate --url "postgresql://fantasy_user:pass123@localhost:5432/fantasy?sslmode=disable" up
-```
-
-Seed the first demo teams and players:
-
-```sh
-psql "postgresql://fantasy_user:pass123@localhost:5432/fantasy" \
-  -f database/seeds/001_players_seed.sql
+dbmate up
 ```
 
 If dbmate fails with `permission denied for schema public`, grant schema create
@@ -83,6 +80,49 @@ permission from a database owner/admin role:
 ```sh
 psql "postgresql://postgres:pass123@localhost:5432/fantasy?sslmode=disable" \
   -c "GRANT CREATE ON SCHEMA public TO fantasy_user;"
+```
+
+### Seeding
+
+`psql` does not read `.env` automatically — export `DATABASE_URL` into your
+shell first:
+
+```sh
+export $(grep DATABASE_URL .env | xargs)
+```
+
+Seed files must run in order, since later files resolve foreign keys against
+earlier ones by name (e.g. `players.real_team_id` via a subquery against
+`real_teams.name`):
+
+```sh
+psql "$DATABASE_URL" -f database/seeds/01_real_teams.sql
+psql "$DATABASE_URL" -f database/seeds/02_players.sql
+```
+
+Verify:
+
+```sh
+psql "$DATABASE_URL" -c "SELECT count(*) FROM real_teams;"   # expect 8
+psql "$DATABASE_URL" -c "SELECT count(*) FROM players;"      # expect 193
+```
+
+**Player seed data is provisional**, sourced from Cricsheet ball-by-ball data
+rather than official CAN player master data — `position` is heuristically
+derived and `is_overseas`/pricing fields are placeholders. See
+[docs/data-import/PLAYER_SEED_TODO.md](docs/data-import/PLAYER_SEED_TODO.md)
+before treating this data as final.
+
+#### Test/dev fixtures (optional)
+
+`database/seeds/test-only/gameweeks_matches_TEST_ONLY.sql` seeds a synthetic
+gameweek/match schedule for exercising deadline and squad-lock logic locally.
+**Do not run this against staging or production** — the schedule is not sourced
+from an official NPL fixture list. Requires `01_real_teams.sql` (and
+`02_players.sql` if testing squad selection) to have run first:
+
+```sh
+psql "$DATABASE_URL" -f database/seeds/test-only/gameweeks_matches_TEST_ONLY.sql
 ```
 
 ## Install
