@@ -73,15 +73,24 @@ export async function findPlayersForValidation(
   return result.rows;
 }
 
+// Matches the user_chips.chip_type CHECK constraint. One row per user per
+// chip type gets seeded here, at squad creation — per the combined schema
+// doc's own note on user_chips: "seeding is application logic at
+// squad-build time, not this migration's concern — see squadService.ts."
+// This was previously missing; buildSquad() below is that application
+// logic finally landing.
+const CHIP_TYPES = ["wildcard", "triple_captain", "bench_boost"] as const;
+
 /**
- * Inserts a full squad for a user atomically. Callers must have already
- * confirmed the user doesn't have an existing squad (see
- * squadService.buildSquad) — this function itself just performs the
- * insert; the UNIQUE(user_id, player_id) constraint guards against
- * duplicate player rows within the batch, not against a second squad
- * being built for the same user. (No DB-level "one squad per user" guard
- * exists yet — see squad.service.ts for why that's an accepted MVP gap,
- * not an oversight.)
+ * Inserts a full squad for a user, and seeds their three user_chips rows
+ * (wildcard/triple_captain/bench_boost, all unused), atomically in one
+ * transaction. Callers must have already confirmed the user doesn't have
+ * an existing squad (see squadService.buildSquad) — this function itself
+ * just performs the inserts; the UNIQUE(user_id, player_id) constraint
+ * guards against duplicate player rows within the batch, not against a
+ * second squad being built for the same user. (No DB-level "one squad
+ * per user" guard exists yet — see squad.service.ts for why that's an
+ * accepted MVP gap, not an oversight.)
  * @param {string} userId users.id.
  * @param {{playerId: number, purchasePrice: number}[]} entries Squad entries.
  */
@@ -102,6 +111,16 @@ export async function insertSquad(
       );
       rows.push(result.rows[0]);
     }
+
+    for (const chipType of CHIP_TYPES) {
+      await client.query(
+        `INSERT INTO user_chips (user_id, chip_type)
+         VALUES ($1, $2)
+         ON CONFLICT (user_id, chip_type) DO NOTHING`,
+        [userId, chipType]
+      );
+    }
+
     return rows;
   });
 }

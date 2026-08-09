@@ -49,3 +49,23 @@ export async function createUser(params: {
   );
   return result.rows[0];
 }
+
+/**
+ * Updates a user's role. Callers (see users.service.ts / users.routes.ts)
+ * are responsible for authorizing this — this function performs no
+ * permission checks of its own, it's a plain data write.
+ * @param {string} userId users.id.
+ * @param {UserRow["role"]} role New role value.
+ */
+export async function updateUserRole(
+  userId: string,
+  role: UserRow["role"]
+): Promise<UserRow | null> {
+  const pool = await getPool();
+  const result = await pool.query<UserRow>(
+    `UPDATE users SET role = $2 WHERE id = $1
+     RETURNING id, display_name, phone_or_email, auth_provider_id, role`,
+    [userId, role]
+  );
+  return result.rows[0] ?? null;
+}

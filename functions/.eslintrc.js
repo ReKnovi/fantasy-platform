@@ -36,6 +36,7 @@ module.exports = {
   rules: {
     "quotes": ["error", "double"],
 
+
     "import/no-unresolved": "off",
 
     // TypeScript provides type information, so JSDoc type annotations
@@ -50,6 +51,18 @@ module.exports = {
       "error",
       {
         "capIsNewExceptions": ["Router"],
+      },
+    ],
+
+    "max-len": [
+      "error",
+      {
+        "code": 80,
+        "tabWidth": 2,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true,
+        "ignoreRegExpLiterals": true,
       },
     ],
   },

@@ -25,7 +25,7 @@ export const REQUIRED_OVERSEAS_COUNT = 4;
 // constant per the tech plan's explicit instruction not to hardcode
 // either value as final. Defaults to the official brief's value (2)
 // until this is confirmed one way or the other.
-export const MAX_PLAYERS_PER_FRANCHISE = 2;
+export const MAX_PLAYERS_PER_FRANCHISE = 14;
 
 // Budget is quoted in the product brief as "100 million virtual units".
 // players.now_cost is stored in tenths of a million (e.g. 105 = 10.5M,

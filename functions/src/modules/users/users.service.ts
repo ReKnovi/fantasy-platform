@@ -2,9 +2,11 @@ import {DecodedIdToken} from "firebase-admin/auth";
 import {
   createUser,
   findUserByAuthProviderId,
+  updateUserRole,
   UserRow,
 } from "./users.repository";
 import {getPool} from "../../database/pool";
+import {notFound} from "../../errors/errors";
 
 /**
  * Returns the app's own `users` row for a verified Firebase token, creating
@@ -94,4 +96,22 @@ export async function linkAuthProviderId(
   }
 
   return result.rows[0];
+}
+
+/**
+ * Changes a user's role (super_admin only — enforced at the route level
+ * via requireRole, not here). Throws notFound if the target user doesn't
+ * exist.
+ * @param {string} userId users.id of the user being promoted/demoted.
+ * @param {UserRow["role"]} role New role value.
+ */
+export async function changeUserRole(
+  userId: string,
+  role: UserRow["role"]
+): Promise<UserRow> {
+  const user = await updateUserRole(userId, role);
+  if (!user) {
+    throw notFound("User not found");
+  }
+  return user;
 }

@@ -1,4 +1,4 @@
-import {ValidationError} from "../../utils/errors";
+import {badRequest} from "../../errors/errors";
 import {
   findPlayingXiByMatch,
   PlayingXiEntry,
@@ -43,7 +43,7 @@ export async function confirmPlayingXi(
   }
   for (const [teamId, count] of wicketKeepersByTeam) {
     if (count > 1) {
-      throw new ValidationError(
+      throw badRequest(
         `real_team_id ${teamId} has ${count} players flagged as match ` +
           "wicket-keeper — only one is allowed"
       );

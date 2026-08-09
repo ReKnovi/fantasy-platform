@@ -1,4 +1,4 @@
-import {ValidationError} from "../../utils/errors";
+import {badRequest, conflict} from "../../errors/errors";
 import {
   BUDGET_CAP_NOW_COST_UNITS,
   MAX_PLAYERS_PER_FRANCHISE,
@@ -26,8 +26,9 @@ export async function getSquad(
 }
 
 /**
- * Validates and creates a user's initial squad. One-time action — the
- * app flow doc treats "build squad" as happening once, with "set
+ * Validates and creates a user's initial squad (also seeds their three
+ * user_chips rows — see squad.repository.ts). One-time action — the app
+ * flow doc treats "build squad" as happening once, with "set
  * lineup"/transfers as the recurring per-gameweek actions. Editing an
  * existing squad is a transfers concern (separate module, not yet
  * built), so this rejects outright if the user already has one.
@@ -48,27 +49,25 @@ export async function buildSquad(
 ): Promise<SquadPlayerRow[]> {
   const existing = await findSquadByUserId(userId);
   if (existing.length > 0) {
-    throw new ValidationError(
+    throw conflict(
       "Squad already exists for this user — use the transfers flow to " +
         "make changes"
     );
   }
 
   if (playerIds.length !== SQUAD_SIZE) {
-    throw new ValidationError(
-      `Squad must contain exactly ${SQUAD_SIZE} players`
-    );
+    throw badRequest(`Squad must contain exactly ${SQUAD_SIZE} players`);
   }
   const uniqueIds = new Set(playerIds);
   if (uniqueIds.size !== playerIds.length) {
-    throw new ValidationError("Squad cannot contain duplicate players");
+    throw badRequest("Squad cannot contain duplicate players");
   }
 
   const players = await findPlayersForValidation(playerIds);
   if (players.length !== playerIds.length) {
     const foundIds = new Set(players.map((p) => p.id));
     const missing = playerIds.filter((id) => !foundIds.has(id));
-    throw new ValidationError(`Unknown player id(s): ${missing.join(", ")}`);
+    throw badRequest(`Unknown player id(s): ${missing.join(", ")}`);
   }
 
   validateEligibility(players);
@@ -96,7 +95,7 @@ function validateEligibility(players: PlayerForValidation[]): void {
     (p) => p.removed || p.status === "unavailable"
   );
   if (ineligible.length > 0) {
-    throw new ValidationError(
+    throw badRequest(
       `Player id(s) not eligible for selection: ${ineligible
         .map((p) => p.id)
         .join(", ")}`
@@ -121,7 +120,7 @@ function validateRoleQuotas(players: PlayerForValidation[]): void {
   }
   for (const [role, required] of Object.entries(ROLE_QUOTAS)) {
     if (counts[role] !== required) {
-      throw new ValidationError(
+      throw badRequest(
         `Squad must contain exactly ${required} ${role} (got ${counts[role]})`
       );
     }
@@ -136,7 +135,7 @@ function validateRoleQuotas(players: PlayerForValidation[]): void {
 function validateOverseasCount(players: PlayerForValidation[]): void {
   const overseasCount = players.filter((p) => p.is_overseas).length;
   if (overseasCount !== REQUIRED_OVERSEAS_COUNT) {
-    throw new ValidationError(
+    throw badRequest(
       `Squad must contain exactly ${REQUIRED_OVERSEAS_COUNT} overseas ` +
         `players (got ${overseasCount})`
     );
@@ -159,7 +158,7 @@ function validateFranchiseLimit(players: PlayerForValidation[]): void {
   }
   for (const [teamId, count] of countsByTeam) {
     if (count > MAX_PLAYERS_PER_FRANCHISE) {
-      throw new ValidationError(
+      throw badRequest(
         `Too many players from real_team_id ${teamId}: ${count} exceeds the ` +
           `limit of ${MAX_PLAYERS_PER_FRANCHISE}`
       );
@@ -174,7 +173,7 @@ function validateFranchiseLimit(players: PlayerForValidation[]): void {
 function validateBudget(players: PlayerForValidation[]): void {
   const totalCost = players.reduce((sum, p) => sum + p.now_cost, 0);
   if (totalCost > BUDGET_CAP_NOW_COST_UNITS) {
-    throw new ValidationError(
+    throw badRequest(
       `Squad cost ${totalCost} exceeds the budget cap of ` +
         `${BUDGET_CAP_NOW_COST_UNITS}`
     );

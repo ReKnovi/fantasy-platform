@@ -1,4 +1,4 @@
-import {ValidationError} from "../../utils/errors";
+import {badRequest} from "../../errors/errors";
 import {
   bulkUpsertStats,
   findStatsByMatch,
@@ -46,11 +46,11 @@ function validateStatsInput(input: PlayerMatchStatsInput): void {
   ];
   for (const [field, value] of nonNegativeFields) {
     if (value !== undefined && value < 0) {
-      throw new ValidationError(`${field} cannot be negative`);
+      throw badRequest(`${field} cannot be negative`);
     }
   }
   if (input.wickets !== undefined && input.wickets > MAX_WICKETS_PER_INNINGS) {
-    throw new ValidationError(
+    throw badRequest(
       `wickets cannot exceed ${MAX_WICKETS_PER_INNINGS} in an innings`
     );
   }
@@ -59,14 +59,14 @@ function validateStatsInput(input: PlayerMatchStatsInput): void {
     input.ballsFaced !== undefined &&
     input.fours > input.ballsFaced
   ) {
-    throw new ValidationError("fours cannot exceed ballsFaced");
+    throw badRequest("fours cannot exceed ballsFaced");
   }
   if (
     input.sixes !== undefined &&
     input.ballsFaced !== undefined &&
     input.sixes > input.ballsFaced
   ) {
-    throw new ValidationError("sixes cannot exceed ballsFaced");
+    throw badRequest("sixes cannot exceed ballsFaced");
   }
 }
 

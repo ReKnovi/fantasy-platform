@@ -1,6 +1,7 @@
 import {Router, Request, Response} from "express";
 import {requireRole} from "../../middleware/roleGuard";
-import {ValidationError} from "../../utils/errors";
+import {asyncHandler} from "../../middleware/asyncHandler";
+import {badRequest} from "../../errors/errors";
 import {
   getStatsByMatch,
   saveScorecardDraft,
@@ -56,48 +57,35 @@ function parseStatsInput(raw: unknown): PlayerMatchStatsInput | null {
 }
 
 // GET /player-match-stats?matchId=1
-playerMatchStatsRouter.get("/", async (req: Request, res: Response) => {
-  const matchId = Number(req.query.matchId);
-  if (Number.isNaN(matchId)) {
-    res.status(400).json({error: "matchId query param is required"});
-    return;
-  }
+playerMatchStatsRouter.get(
+  "/",
+  asyncHandler(async (req: Request, res: Response) => {
+    const matchId = Number(req.query.matchId);
+    if (Number.isNaN(matchId)) {
+      throw badRequest("matchId query param is required");
+    }
 
-  try {
     const stats = await getStatsByMatch(matchId);
     res.json({data: stats});
-  } catch (err) {
-    console.error("GET /player-match-stats failed", err);
-    res.status(500).json({error: "Failed to fetch player match stats"});
-  }
-});
+  })
+);
 
 // POST /player-match-stats — upsert one player's stats (draft).
 // Body: { matchId: number, stats: { playerId, runs, wickets, ... } }
 playerMatchStatsRouter.post(
   "/",
   requireRole("scorer_admin", "roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const matchId = Number(req.body?.matchId);
     const input = parseStatsInput(req.body?.stats);
 
     if (Number.isNaN(matchId) || !input) {
-      res.status(400).json({error: "matchId and stats.playerId are required"});
-      return;
+      throw badRequest("matchId and stats.playerId are required");
     }
 
-    try {
-      const row = await saveStatsDraft(matchId, input);
-      res.status(201).json({data: row});
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        res.status(400).json({error: err.message});
-        return;
-      }
-      console.error("POST /player-match-stats failed", err);
-      res.status(500).json({error: "Failed to save stats"});
-    }
-  }
+    const row = await saveStatsDraft(matchId, input);
+    res.status(201).json({data: row});
+  })
 );
 
 // POST /player-match-stats/bulk — upsert a full scorecard atomically.
@@ -105,7 +93,7 @@ playerMatchStatsRouter.post(
 playerMatchStatsRouter.post(
   "/bulk",
   requireRole("scorer_admin", "roster_admin", "super_admin"),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const matchId = Number(req.body?.matchId);
     const rawEntries = req.body?.stats;
 
@@ -114,34 +102,19 @@ playerMatchStatsRouter.post(
       !Array.isArray(rawEntries) ||
       rawEntries.length === 0
     ) {
-      res
-        .status(400)
-        .json({error: "matchId and a non-empty stats array are required"});
-      return;
+      throw badRequest("matchId and a non-empty stats array are required");
     }
 
     const inputs: PlayerMatchStatsInput[] = [];
     for (const raw of rawEntries) {
       const parsed = parseStatsInput(raw);
       if (!parsed) {
-        res.status(400).json({
-          error: "Every stats entry needs a numeric playerId",
-        });
-        return;
+        throw badRequest("Every stats entry needs a numeric playerId");
       }
       inputs.push(parsed);
     }
 
-    try {
-      const rows = await saveScorecardDraft(matchId, inputs);
-      res.status(201).json({data: rows});
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        res.status(400).json({error: err.message});
-        return;
-      }
-      console.error("POST /player-match-stats/bulk failed", err);
-      res.status(500).json({error: "Failed to save scorecard"});
-    }
-  }
+    const rows = await saveScorecardDraft(matchId, inputs);
+    res.status(201).json({data: rows});
+  })
 );
