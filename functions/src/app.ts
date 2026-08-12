@@ -12,6 +12,7 @@ import {playerMatchStatsRouter} from "./modules/playerMS/playerMS.routes";
 import {squadSelectionRouter} from "./modules/squadSelection/squadSelection.routes";
 import {leaguesRouter} from "./modules/leagues/leagues.routes";
 import {squadRouter} from "./modules/squad/squad.routes";
+import {transfersRouter} from "./modules/transfers/transfers.routes";
 import {errorHandler} from "./middleware/errorHandler";
 import {notFoundHandler} from "./middleware/notFoundHandler";
 
@@ -33,13 +34,10 @@ app.use("/gameweeks", requireFirebaseAuth, gameweeksRouter);
 app.use("/matches", requireFirebaseAuth, matchesRouter);
 app.use("/playing-xi", requireFirebaseAuth, playingXiRouter);
 app.use("/leagues", requireFirebaseAuth, leaguesRouter);
-/* eslint-disable operator-linebreak */
 app.use("/player-match-stats", requireFirebaseAuth, playerMatchStatsRouter);
-/* eslint-enable operator-linebreak */
 app.use("/squad", requireFirebaseAuth, squadRouter);
-/* eslint-disable operator-linebreak */
 app.use("/squad-selection", requireFirebaseAuth, squadSelectionRouter);
-/* eslint-enable operator-linebreak */
+app.use("/transfers", requireFirebaseAuth, transfersRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

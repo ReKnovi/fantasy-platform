@@ -233,6 +233,12 @@
             Match Day
           </button>
           <button
+            data-view="transfers"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Transfers
+          </button>
+          <button
             data-view="fixtures"
             class="nav-btn pb-1 hover:text-on-surface transition"
           >
@@ -282,6 +288,7 @@
       >
         <button data-view="squad" class="nav-btn py-2 px-2">Squad</button>
         <button data-view="matchday" class="nav-btn py-2 px-2">Match</button>
+        <button data-view="transfers" class="nav-btn py-2 px-2">Xfer</button>
         <button data-view="fixtures" class="nav-btn py-2 px-2">Fixtures</button>
         <button data-view="players" class="nav-btn py-2 px-2">Players</button>
         <button data-view="leagues" class="nav-btn py-2 px-2">Leagues</button>
@@ -389,14 +396,22 @@
       id="player-modal"
       class="fixed inset-x-4 top-[10vh] max-w-lg mx-auto bg-surface-container border border-outline-variant z-50 hidden max-h-[80vh] overflow-y-auto scrollbar-thin"
     ></div>
+    <div
+      id="league-modal-backdrop"
+      class="fixed inset-0 bg-black/60 z-40 hidden"
+    ></div>
+    <div
+      id="league-modal"
+      class="fixed inset-x-4 top-[10vh] max-w-lg mx-auto bg-surface-container border border-outline-variant z-50 hidden max-h-[80vh] overflow-y-auto scrollbar-thin"
+    ></div>
 
     <main class="max-w-[1280px] mx-auto px-6 py-8">
       <section id="view-squad" class="view">
         <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
-            <h2 class="font-display font-800 text-3xl">Squad Builder</h2>
+            <h2 class="font-display font-800 text-3xl">Squad</h2>
             <p class="text-on-surface-variant text-sm mt-1">
-              14 players · 100 credit budget · 8-franchise pool.
+              Build initial squad · view saved squad via GET /squad.
             </p>
           </div>
           <div class="flex gap-3">
@@ -406,90 +421,121 @@
             <button id="squad-save" class="btn-primary">Save Squad</button>
           </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-          <div>
-            <div class="glass p-4 mb-4 flex flex-wrap gap-3">
-              <input
-                id="filter-search"
-                class="input-field flex-1 min-w-[160px]"
-                placeholder="Search player..."
-              />
-              <select id="filter-position" class="input-field w-auto">
-                <option value="">All Roles</option>
-                <option value="wicket_keeper">WK</option>
-                <option value="batsman">BAT</option>
-                <option value="all_rounder">AR</option>
-                <option value="bowler">BOWL</option>
-              </select>
-              <select id="filter-overseas" class="input-field w-auto">
-                <option value="">Overseas: Any</option>
-                <option value="true">Overseas</option>
-                <option value="false">Domestic</option>
-              </select>
-            </div>
-            <div
-              id="player-pool"
-              class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto scrollbar-thin pr-1"
-            >
-              <div
-                class="text-on-surface-variant text-sm p-6 text-center col-span-2"
-              >
-                Connect in Settings, then Refresh.
+        <div class="flex gap-2 mb-4 text-sm font-600" id="squad-tabs">
+          <button
+            data-squad-tab="build"
+            class="px-3 py-1 border border-secondary text-secondary"
+          >
+            Build
+          </button>
+          <button
+            data-squad-tab="mine"
+            class="px-3 py-1 border border-outline-variant text-on-surface-variant"
+          >
+            My Squad
+          </button>
+        </div>
+        <div id="squad-panel-build">
+          <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+            <div>
+              <div class="glass p-4 mb-4 flex flex-wrap gap-3">
+                <input
+                  id="filter-search"
+                  class="input-field flex-1 min-w-[160px]"
+                  placeholder="Search player..."
+                />
+                <select id="filter-position" class="input-field w-auto">
+                  <option value="">All Roles</option>
+                  <option value="wicket_keeper">WK</option>
+                  <option value="batsman">BAT</option>
+                  <option value="all_rounder">AR</option>
+                  <option value="bowler">BOWL</option>
+                </select>
+                <select id="filter-overseas" class="input-field w-auto">
+                  <option value="">Overseas: Any</option>
+                  <option value="true">Overseas</option>
+                  <option value="false">Domestic</option>
+                </select>
               </div>
+              <div
+                id="player-pool"
+                class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto scrollbar-thin pr-1"
+              >
+                <div
+                  class="text-on-surface-variant text-sm p-6 text-center col-span-2"
+                >
+                  Connect in Settings, then Refresh.
+                </div>
+              </div>
+            </div>
+            <aside class="glass p-5 h-fit sticky top-24">
+              <h3 class="font-display font-700 text-lg mb-4 text-secondary">
+                Squad Summary
+              </h3>
+              <div class="mb-4">
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-on-surface-variant">BUDGET</span
+                  ><span id="sum-budget" class="font-mono">0.0 / 100.0</span>
+                </div>
+                <div class="h-1.5 bg-surface-container-high">
+                  <div
+                    id="sum-budget-bar"
+                    class="h-1.5 bg-gradient-to-r from-primary to-secondary"
+                    style="width: 0%"
+                  ></div>
+                </div>
+              </div>
+              <div
+                id="squad-roles"
+                class="grid grid-cols-2 gap-2 text-xs font-mono mb-4"
+              ></div>
+              <div class="text-xs font-mono mb-4 flex justify-between">
+                <span class="text-on-surface-variant">TOTAL</span
+                ><span id="sum-total">0 / 14</span>
+              </div>
+              <div class="text-xs font-mono mb-4 flex justify-between">
+                <span class="text-on-surface-variant">OVERSEAS</span
+                ><span id="sum-overseas">0 (max 4)</span>
+              </div>
+              <div class="text-xs font-mono mb-4">
+                <span class="text-on-surface-variant">FRANCHISES</span>
+                <div id="sum-franchises" class="mt-1 space-y-0.5"></div>
+              </div>
+              <div
+                id="squad-validation"
+                class="text-xs space-y-1 border-t border-outline-variant pt-3"
+              ></div>
+              <h4 class="font-display font-700 text-sm mt-5 mb-2">My Picks</h4>
+              <div
+                id="squad-picks"
+                class="space-y-1 max-h-[240px] overflow-y-auto scrollbar-thin"
+              ></div>
+            </aside>
+          </div>
+        </div>
+        <div id="squad-panel-mine" class="hidden">
+          <div class="glass p-5 mb-4 flex items-center justify-between">
+            <h3 class="font-display font-700 text-lg text-secondary">
+              Saved Squad
+            </h3>
+            <button id="squad-load-mine" class="btn-ghost text-xs">
+              Reload GET /squad
+            </button>
+          </div>
+          <div id="my-squad-list" class="space-y-2 text-xs font-mono">
+            <div class="text-on-surface-variant text-sm glass p-6 text-center">
+              No squad loaded.
             </div>
           </div>
-          <aside class="glass p-5 h-fit sticky top-24">
-            <h3 class="font-display font-700 text-lg mb-4 text-secondary">
-              Squad Summary
-            </h3>
-            <div class="mb-4">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-on-surface-variant">BUDGET</span
-                ><span id="sum-budget" class="font-mono">0.0 / 100.0</span>
-              </div>
-              <div class="h-1.5 bg-surface-container-high">
-                <div
-                  id="sum-budget-bar"
-                  class="h-1.5 bg-gradient-to-r from-primary to-secondary"
-                  style="width: 0%"
-                ></div>
-              </div>
-            </div>
-            <div
-              id="squad-roles"
-              class="grid grid-cols-2 gap-2 text-xs font-mono mb-4"
-            ></div>
-            <div class="text-xs font-mono mb-4 flex justify-between">
-              <span class="text-on-surface-variant">TOTAL</span
-              ><span id="sum-total">0 / 14</span>
-            </div>
-            <div class="text-xs font-mono mb-4 flex justify-between">
-              <span class="text-on-surface-variant">OVERSEAS</span
-              ><span id="sum-overseas">0 (max 4)</span>
-            </div>
-            <div class="text-xs font-mono mb-4">
-              <span class="text-on-surface-variant">FRANCHISES</span>
-              <div id="sum-franchises" class="mt-1 space-y-0.5"></div>
-            </div>
-            <div
-              id="squad-validation"
-              class="text-xs space-y-1 border-t border-outline-variant pt-3"
-            ></div>
-            <h4 class="font-display font-700 text-sm mt-5 mb-2">My Picks</h4>
-            <div
-              id="squad-picks"
-              class="space-y-1 max-h-[240px] overflow-y-auto scrollbar-thin"
-            ></div>
-          </aside>
         </div>
       </section>
 
       <section id="view-matchday" class="view hidden">
         <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
-            <h2 class="font-display font-800 text-3xl">Match Day Lineup</h2>
+            <h2 class="font-display font-800 text-3xl">Match Day</h2>
             <p class="text-on-surface-variant text-sm mt-1">
-              Starting XI, bench, captain / vice-captain.
+              Squad selection · effective XI after auto-subs.
             </p>
           </div>
           <div class="flex items-center gap-3">
@@ -500,38 +546,138 @@
             <button id="md-save" class="btn-primary">Save Lineup</button>
           </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-          <div id="md-players" class="space-y-2">
-            <div class="text-on-surface-variant text-sm glass p-6 text-center">
-              Select gameweek and Load.
+        <div class="flex gap-2 mb-4 text-sm font-600" id="md-tabs">
+          <button
+            data-md-tab="pick"
+            class="px-3 py-1 border border-secondary text-secondary"
+          >
+            Set Lineup
+          </button>
+          <button
+            data-md-tab="effective"
+            class="px-3 py-1 border border-outline-variant text-on-surface-variant"
+          >
+            Effective XI
+          </button>
+        </div>
+        <div id="md-panel-pick">
+          <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div id="md-players" class="space-y-2">
+              <div
+                class="text-on-surface-variant text-sm glass p-6 text-center"
+              >
+                Select gameweek and Load.
+              </div>
+            </div>
+            <aside
+              class="glass p-5 h-fit sticky top-24 text-xs font-mono space-y-2"
+            >
+              <h3 class="font-display font-700 text-sm mb-3 text-secondary">
+                LINEUP STATUS
+              </h3>
+              <div class="flex justify-between">
+                <span class="text-on-surface-variant">STARTING</span
+                ><span id="md-starting-count">0 / 11</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-on-surface-variant">BENCH</span
+                ><span id="md-bench-count">0 / 3</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-on-surface-variant">CAPTAIN</span
+                ><span id="md-captain-name">—</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-on-surface-variant">VICE</span
+                ><span id="md-vc-name">—</span>
+              </div>
+              <div
+                id="md-validation"
+                class="pt-3 border-t border-outline-variant space-y-1"
+              ></div>
+            </aside>
+          </div>
+        </div>
+        <div id="md-panel-effective" class="hidden">
+          <div class="glass p-4 mb-4 flex flex-wrap gap-3 items-center">
+            <p class="text-xs text-on-surface-variant flex-1">
+              GET /squad-selection/effective-lineup — starting XI after
+              auto-substitution.
+            </p>
+            <button id="md-load-effective" class="btn-ghost text-xs">
+              Load Effective XI
+            </button>
+          </div>
+          <div id="md-effective-list" class="space-y-2 text-sm font-mono">
+            <div class="text-on-surface-variant glass p-6 text-center">
+              Select gameweek and Load Effective XI.
             </div>
           </div>
-          <aside
-            class="glass p-5 h-fit sticky top-24 text-xs font-mono space-y-2"
-          >
-            <h3 class="font-display font-700 text-sm mb-3 text-secondary">
-              LINEUP STATUS
+        </div>
+      </section>
+
+      <section id="view-transfers" class="view hidden">
+        <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h2 class="font-display font-800 text-3xl">Transfers</h2>
+            <p class="text-on-surface-variant text-sm mt-1">
+              1 free transfer per gameweek · extra transfers cost 4 pts.
+            </p>
+          </div>
+          <button id="tr-refresh" class="btn-ghost text-xs">
+            Refresh History
+          </button>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+          <div class="glass p-5">
+            <h3 class="font-display font-700 text-lg mb-4 text-primary">
+              Make Transfer
             </h3>
-            <div class="flex justify-between">
-              <span class="text-on-surface-variant">STARTING</span
-              ><span id="md-starting-count">0 / 11</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="text-on-surface-variant text-xs block mb-1"
+                  >GAMEWEEK</label
+                >
+                <select id="tr-gameweek" class="input-field">
+                  <option value="">Gameweek…</option>
+                </select>
+              </div>
+              <div></div>
+              <div>
+                <label class="text-on-surface-variant text-xs block mb-1"
+                  >PLAYER OUT (your squad)</label
+                >
+                <select id="tr-out" class="input-field">
+                  <option value="">Select…</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-on-surface-variant text-xs block mb-1"
+                  >PLAYER IN (same role)</label
+                >
+                <select id="tr-in" class="input-field">
+                  <option value="">Select…</option>
+                </select>
+              </div>
             </div>
-            <div class="flex justify-between">
-              <span class="text-on-surface-variant">BENCH</span
-              ><span id="md-bench-count">0 / 3</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-on-surface-variant">CAPTAIN</span
-              ><span id="md-captain-name">—</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-on-surface-variant">VICE</span
-              ><span id="md-vc-name">—</span>
-            </div>
+            <button id="tr-submit" class="btn-primary">POST /transfers</button>
+          </div>
+          <aside class="glass p-5 h-fit">
+            <h3 class="font-display font-700 text-sm mb-3 text-secondary">
+              Transfer History
+            </h3>
+            <label
+              class="text-on-surface-variant text-xs flex items-center gap-2 mb-3"
+            >
+              <input type="checkbox" id="tr-filter-gw" class="accent-primary" />
+              Filter by gameweek
+            </label>
             <div
-              id="md-validation"
-              class="pt-3 border-t border-outline-variant space-y-1"
-            ></div>
+              id="tr-history"
+              class="space-y-2 text-xs font-mono max-h-[50vh] overflow-y-auto scrollbar-thin"
+            >
+              <div class="text-on-surface-variant">No transfers loaded.</div>
+            </div>
           </aside>
         </div>
       </section>
@@ -605,14 +751,61 @@
 
       <section id="view-leagues" class="view hidden">
         <h2 class="font-display font-800 text-3xl mb-2">Leagues</h2>
-        <div class="glass p-8 text-center max-w-xl">
-          <span class="msym text-4xl text-on-surface-variant"
-            >construction</span
-          >
-          <p class="text-on-surface-variant mt-4 text-sm">
-            League routes (<code class="text-secondary">/leagues</code>) are not
-            implemented yet. DB schema exists — API coming soon.
-          </p>
+        <p class="text-on-surface-variant text-sm mb-6">
+          Private leagues via invite code.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="glass p-5">
+            <h3 class="font-display font-700 text-lg mb-1 text-primary">
+              Create League
+            </h3>
+            <p class="text-on-surface-variant text-xs mb-4">
+              POST /leagues — you become owner and get a join code.
+            </p>
+            <div class="flex gap-2">
+              <input
+                id="league-name"
+                class="input-field"
+                placeholder="League name"
+              />
+              <button
+                id="btn-create-league"
+                class="btn-primary whitespace-nowrap"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+          <div class="glass p-5">
+            <h3 class="font-display font-700 text-lg mb-1 text-secondary">
+              Join League
+            </h3>
+            <p class="text-on-surface-variant text-xs mb-4">
+              POST /leagues/join
+            </p>
+            <div class="flex gap-2">
+              <input
+                id="league-code"
+                class="input-field"
+                placeholder="Join code"
+              />
+              <button id="btn-join-league" class="btn-ghost whitespace-nowrap">
+                Join
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-700 text-lg">My Leagues</h3>
+          <button id="leagues-refresh" class="btn-ghost text-xs">
+            GET /leagues/mine
+          </button>
+        </div>
+        <div
+          id="leagues-list"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          <div class="text-on-surface-variant text-sm">No leagues loaded.</div>
         </div>
       </section>
 
@@ -990,6 +1183,9 @@ Load profile after sign-in.</pre>
         xiSelections: {},
         statsRows: [],
         selectedFxGw: null,
+        leagues: [],
+        mySquadRows: [],
+        transferHistory: [],
       };
 
       function defaultApiBase() {
@@ -1313,6 +1509,7 @@ Load profile after sign-in.</pre>
           "admin-gw-select",
           "gw-update-select",
           "match-gw",
+          "tr-gameweek",
         ].forEach((id) => {
           const el = document.getElementById(id);
           if (!el) return;
@@ -1337,12 +1534,62 @@ Load profile after sign-in.</pre>
       async function loadMySquad() {
         try {
           const squad = await api("/squad");
-          if (Array.isArray(squad) && squad.length) {
-            state.squadPicks = squad.map(squadPlayerFromRow);
+          state.mySquadRows = Array.isArray(squad) ? squad : [];
+          if (state.mySquadRows.length) {
+            state.squadPicks = state.mySquadRows.map(squadPlayerFromRow);
             renderSquadSummary();
           }
-        } catch (_) {}
+          renderMySquadList();
+          return state.mySquadRows;
+        } catch (_) {
+          state.mySquadRows = [];
+          renderMySquadList();
+          return [];
+        }
       }
+
+      function renderMySquadList() {
+        const el = document.getElementById("my-squad-list");
+        if (!state.mySquadRows.length) {
+          el.innerHTML =
+            '<div class="text-on-surface-variant text-sm glass p-6 text-center">No squad yet — build via POST /squad.</div>';
+          return;
+        }
+        el.innerHTML = state.mySquadRows
+          .map((row) => {
+            const pending = row.forced_transfer_pending
+              ? '<span class="text-tertiary">FORCED TRANSFER</span>'
+              : "";
+            return `<div class="glass p-3 flex flex-wrap justify-between gap-2">
+            <div><span class="font-600">${row.name}</span>
+              <span class="text-on-surface-variant ml-2">${ROLE_LABEL[row.position]}</span> ${pending}</div>
+            <div class="text-on-surface-variant">id ${row.player_id} · bought ${fmtCost(row.purchase_price)} · now ${fmtCost(row.now_cost)} · ${teamName(row.real_team_id)}</div>
+          </div>`;
+          })
+          .join("");
+      }
+
+      document.querySelectorAll("[data-squad-tab]").forEach((btn) => {
+        btn.onclick = () => {
+          const tab = btn.dataset.squadTab;
+          document.querySelectorAll("[data-squad-tab]").forEach((b) => {
+            const active = b.dataset.squadTab === tab;
+            b.className = `px-3 py-1 border ${active ? "border-secondary text-secondary" : "border-outline-variant text-on-surface-variant"}`;
+          });
+          document
+            .getElementById("squad-panel-build")
+            .classList.toggle("hidden", tab !== "build");
+          document
+            .getElementById("squad-panel-mine")
+            .classList.toggle("hidden", tab !== "mine");
+          if (tab === "mine" && state.idToken)
+            loadMySquad().catch((e) => toast(e.message, "error"));
+        };
+      });
+      document.getElementById("squad-load-mine").onclick = () =>
+        loadMySquad()
+          .then(() => toast("Squad loaded.", "success"))
+          .catch((e) => toast(e.message, "error"));
 
       /* Squad builder */
       function renderPlayerPool() {
