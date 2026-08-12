@@ -1,4 +1,5 @@
 import {NextFunction, Request, Response} from "express";
+import {DatabaseError} from "pg";
 import {AppError} from "../errors/AppError";
 
 interface PostgresError extends Error {
@@ -8,9 +9,7 @@ interface PostgresError extends Error {
 }
 
 const isPostgresError = (err: unknown): err is PostgresError => {
-  return (
-    err instanceof Error && typeof (err as PostgresError).code === "string"
-  );
+  return err instanceof DatabaseError;
 };
 
 export function errorHandler(

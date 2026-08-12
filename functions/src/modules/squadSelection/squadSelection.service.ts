@@ -100,8 +100,9 @@ export async function setLineup(
   const benchOrders = bench.map((e) => e.benchOrder);
   const expectedOrders = Array.from({length: BENCH_SIZE}, (_, i) => i + 1);
   const allNumeric = benchOrders.every((o) => typeof o === "number");
-  const sortedBenchOrders = allNumeric ? /* eslint-disable operator-linebreak */
-    [...(benchOrders as number[])].sort((a, b) => a - b)
+  /* eslint-disable operator-linebreak */
+  const sortedBenchOrders = allNumeric
+    ? [...(benchOrders as number[])].sort((a, b) => a - b)
     : [];
   /* eslint-enable operator-linebreak */
   const ordersValid =
