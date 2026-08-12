@@ -1,8 +1,9 @@
 import {badRequest, conflict} from "../../errors/errors";
 import {
   BUDGET_CAP_NOW_COST_UNITS,
+  MAX_OVERSEAS_COUNT,
   MAX_PLAYERS_PER_FRANCHISE,
-  REQUIRED_OVERSEAS_COUNT,
+  MIN_FRANCHISES_REPRESENTED,
   ROLE_QUOTAS,
   SQUAD_SIZE,
 } from "./squadRules.config";
@@ -26,7 +27,7 @@ export async function getSquad(
 }
 
 /**
- * Validates and creates a user's initial squad (also seeds their three
+ * Validates and creates a user's initial squad (also seeds their four
  * user_chips rows — see squad.repository.ts). One-time action — the app
  * flow doc treats "build squad" as happening once, with "set
  * lineup"/transfers as the recurring per-gameweek actions. Editing an
@@ -50,8 +51,7 @@ export async function buildSquad(
   const existing = await findSquadByUserId(userId);
   if (existing.length > 0) {
     throw conflict(
-      "Squad already exists for this user — use the transfers flow to " +
-        "make changes"
+      "Squad already exists for this user — use the transfers flow to make changes"
     );
   }
 
@@ -74,6 +74,7 @@ export async function buildSquad(
   validateRoleQuotas(players);
   validateOverseasCount(players);
   validateFranchiseLimit(players);
+  validateFranchiseSpread(players);
   validateBudget(players);
 
   const entries = players.map((p) => ({
@@ -128,16 +129,17 @@ function validateRoleQuotas(players: PlayerForValidation[]): void {
 }
 
 /**
- * Checks the exactly-4-overseas requirement (a mandatory inclusion, not
- * a cap — see the differences doc, point 8).
+ * Checks the overseas-player cap (Discovery Doc, F3: "Max 4 overseas
+ * players") — a ceiling, not a mandatory count. A squad with 0 overseas
+ * players is legal; a squad with 5 is not.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
 function validateOverseasCount(players: PlayerForValidation[]): void {
   const overseasCount = players.filter((p) => p.is_overseas).length;
-  if (overseasCount !== REQUIRED_OVERSEAS_COUNT) {
+  if (overseasCount > MAX_OVERSEAS_COUNT) {
     throw badRequest(
-      `Squad must contain exactly ${REQUIRED_OVERSEAS_COUNT} overseas ` +
-        `players (got ${overseasCount})`
+      `Squad cannot contain more than ${MAX_OVERSEAS_COUNT} overseas players ` +
+        `(got ${overseasCount})`
     );
   }
 }
@@ -167,6 +169,26 @@ function validateFranchiseLimit(players: PlayerForValidation[]): void {
 }
 
 /**
+ * Checks the minimum-franchise-spread requirement (Discovery Doc, F3:
+ * "Min 5 of 8 franchises represented"). Distinct from the per-franchise
+ * cap above — that limits concentration in any one franchise, this
+ * ensures the squad isn't drawn from too narrow a slice of the league
+ * even while staying under that cap.
+ * @param {PlayerForValidation[]} players Proposed squad's player rows.
+ */
+function validateFranchiseSpread(players: PlayerForValidation[]): void {
+  const distinctTeams = new Set(
+    players.map((p) => p.real_team_id).filter((id): id is number => id !== null)
+  );
+  if (distinctTeams.size < MIN_FRANCHISES_REPRESENTED) {
+    throw badRequest(
+      `Squad must include players from at least ${MIN_FRANCHISES_REPRESENTED} ` +
+        `different franchises (got ${distinctTeams.size})`
+    );
+  }
+}
+
+/**
  * Checks the total squad cost against the budget cap.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
@@ -174,8 +196,7 @@ function validateBudget(players: PlayerForValidation[]): void {
   const totalCost = players.reduce((sum, p) => sum + p.now_cost, 0);
   if (totalCost > BUDGET_CAP_NOW_COST_UNITS) {
     throw badRequest(
-      `Squad cost ${totalCost} exceeds the budget cap of ` +
-        `${BUDGET_CAP_NOW_COST_UNITS}`
+      `Squad cost ${totalCost} exceeds the budget cap of ${BUDGET_CAP_NOW_COST_UNITS}`
     );
   }
 }

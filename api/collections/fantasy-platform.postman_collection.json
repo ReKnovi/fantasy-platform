@@ -1,9 +1,10 @@
 {
   "info": {
-    "_postman_id": "c49dc6ea-2239-41d2-bc8f-8506fdf42a7a",
+    "_postman_id": "4060b624-126b-4fdc-b7c3-effb0c513ae8",
     "name": "Fantasy Platform API",
     "description": "Firebase Functions / Express API collection for the Fantasy Platform backend.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "32031617"
   },
   "item": [
     {
@@ -81,7 +82,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{firebaseIdToken}}",
+                  "value": "{{vault:auth_secret_0hwh}}",
                   "type": "string"
                 }
               ]
@@ -105,7 +106,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{firebaseIdToken}}",
+                  "value": "{{vault:auth_secret_0hwh}}",
                   "type": "string"
                 }
               ]
@@ -122,13 +123,696 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "current user details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Roles (admin)",
+      "item": [
+        {
+          "name": "Promote/Change User Role (super_admin only)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"scorer_admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:id/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id", "role"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REPLACE_WITH_TARGET_USER_UUID"
+                }
+              ]
+            },
+            "description": "Requires the signed-in caller to already be super_admin (the very first one still has to be set via a direct DB UPDATE — see the module notes). :id is the target user's users.id UUID, not their Firebase uid. role must be one of: user, scorer_admin, roster_admin, super_admin. Trying to change your own role should 400 with 'Cannot change your own role'."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Real Teams",
+      "item": [
+        {
+          "name": "List Real Teams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/real-teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["real-teams"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Real Team By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/real-teams/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["real-teams", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Real Team (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Biratnagar Titans\",\n  \"shortName\": \"BRT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/real-teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["real-teams"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Real Team Status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"eliminated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/real-teams/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["real-teams", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gameweeks",
+      "item": [
+        {
+          "name": "List Gameweeks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/gameweeks",
+              "host": ["{{baseUrl}}"],
+              "path": ["gameweeks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Gameweek",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/gameweeks/current",
+              "host": ["{{baseUrl}}"],
+              "path": ["gameweeks", "current"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Gameweek By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/gameweeks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["gameweeks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Gameweek (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Gameweek 1\",\n  \"phase\": \"group_stage\",\n  \"deadlineTime\": \"2026-11-17T09:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gameweeks",
+              "host": ["{{baseUrl}}"],
+              "path": ["gameweeks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Gameweek Status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"finished\": true,\n  \"dataChecked\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gameweeks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["gameweeks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Matches",
+      "item": [
+        {
+          "name": "List Matches By Gameweek",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches?gameweekId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches"],
+              "query": [
+                {
+                  "key": "gameweekId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Match By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Match (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gameweekId\": 1,\n  \"teamAId\": 1,\n  \"teamBId\": 2,\n  \"matchDate\": \"2026-11-17T09:00:00.000Z\",\n  \"venue\": \"TU International Cricket Ground\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matches",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record Toss Winner",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tossWinnerId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id/toss",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id", "toss"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Save Match Result (draft)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchStatus\": \"completed\",\n  \"winnerTeamId\": 1,\n  \"winMargin\": 24,\n  \"winMarginType\": \"runs\",\n  \"playerOfMatchId\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id/result",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id", "result"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Match",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id", "publish"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Player Match Stats",
+      "item": [
+        {
+          "name": "Get Stats For Match",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/player-match-stats?matchId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["player-match-stats"],
+              "query": [
+                {
+                  "key": "matchId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upsert One Player's Stats (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"stats\": {\n    \"playerId\": 1,\n    \"runs\": 45,\n    \"ballsFaced\": 32,\n    \"fours\": 5,\n    \"sixes\": 1,\n    \"isBattingDismissal\": true,\n    \"catchesTaken\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/player-match-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["player-match-stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Upsert Full Scorecard (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"stats\": [\n    {\n      \"playerId\": 1,\n      \"runs\": 45,\n      \"ballsFaced\": 32,\n      \"fours\": 5,\n      \"sixes\": 1,\n      \"isBattingDismissal\": true,\n      \"catchesTaken\": 1\n    },\n    {\n      \"playerId\": 2,\n      \"legalBallsBowled\": 24,\n      \"runsConceded\": 28,\n      \"wickets\": 3,\n      \"maidens\": 0\n    },\n    {\n      \"playerId\": 3,\n      \"runs\": 12,\n      \"ballsFaced\": 10,\n      \"isBattingDismissal\": false\n    },\n    {\n      \"playerId\": 4,\n      \"runs\": 8,\n      \"ballsFaced\": 6,\n      \"stumpings\": 2,\n      \"catchesTaken\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/player-match-stats/bulk",
+              "host": ["{{baseUrl}}"],
+              "path": ["player-match-stats", "bulk"]
+            },
+            "description": "All 4 rows commit or none do (single transaction). Try setting one player's wickets to 11 to see the whole batch get rejected with a wickets-cannot-exceed-10 ValidationError."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Squad",
+      "item": [
+        {
+          "name": "Get My Squad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/squad",
+              "host": ["{{baseUrl}}"],
+              "path": ["squad"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Build Squad",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playerIds\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/squad",
+              "host": ["{{baseUrl}}"],
+              "path": ["squad"]
+            },
+            "description": "Only 4 players exist in the seed right now, so this WILL fail with 'Unknown player id(s): 5, 6, 7...' — that's expected and a decent smoke test that validation is wired up. Re-run with real player ids once tomorrow's seed lands, picking 2 WK / 3 AR / 5 BOWL / 4 BAT, exactly 4 overseas, budget <= 1000 now_cost units, max 2 per franchise (current config default)."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Squad Selection",
+      "item": [
+        {
+          "name": "Get My Lineup For Gameweek",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/squad-selection?gameweekId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["squad-selection"],
+              "query": [
+                {
+                  "key": "gameweekId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Lineup For Gameweek",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gameweekId\": 1,\n  \"entries\": [\n    { \"playerId\": 1, \"isStarting\": true, \"isCaptain\": true },\n    { \"playerId\": 2, \"isStarting\": true, \"isViceCaptain\": true },\n    { \"playerId\": 3, \"isStarting\": true },\n    { \"playerId\": 4, \"isStarting\": true },\n    { \"playerId\": 5, \"isStarting\": true },\n    { \"playerId\": 6, \"isStarting\": true },\n    { \"playerId\": 7, \"isStarting\": true },\n    { \"playerId\": 8, \"isStarting\": true },\n    { \"playerId\": 9, \"isStarting\": true },\n    { \"playerId\": 10, \"isStarting\": true },\n    { \"playerId\": 11, \"isStarting\": true },\n    { \"playerId\": 12, \"isStarting\": false, \"benchOrder\": 1 },\n    { \"playerId\": 13, \"isStarting\": false, \"benchOrder\": 2 },\n    { \"playerId\": 14, \"isStarting\": false, \"benchOrder\": 3 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/squad-selection",
+              "host": ["{{baseUrl}}"],
+              "path": ["squad-selection"]
+            },
+            "description": "The 14 playerIds here must exactly match your own squad from GET /squad — swap these placeholders for your actual squad's player ids first, or this will 400 with 'Player id(s) not in your squad'. Also needs a gameweekId whose deadline_time hasn't passed yet (check GET /gameweeks/current) or you'll get the 'Gameweek is locked' error instead.\n\nGood negative tests to try: move isCaptain onto a bench player (expects 'Captain and vice-captain must both be in the starting XI'), duplicate a benchOrder value (expects the benchOrder uniqueness error), or drop one entry so only 13 are submitted (expects the exactly-14 error)."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Playing XI",
+      "item": [
+        {
+          "name": "Get Playing XI For Match",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/playing-xi?matchId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["playing-xi"],
+              "query": [
+                {
+                  "key": "matchId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Playing XI (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": 1,\n  \"entries\": [\n    { \"playerId\": 1, \"realTeamId\": 1, \"isMatchWicketKeeper\": false },\n    { \"playerId\": 2, \"realTeamId\": 1, \"isMatchWicketKeeper\": false },\n    { \"playerId\": 3, \"realTeamId\": 2, \"isMatchWicketKeeper\": false },\n    { \"playerId\": 4, \"realTeamId\": 2, \"isMatchWicketKeeper\": true }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/playing-xi",
+              "host": ["{{baseUrl}}"],
+              "path": ["playing-xi"]
+            },
+            "description": "Only 4 seeded players exist right now (2 per team), so this is a minimal smoke test, not a real 22-player XI. Re-run with real player ids once tomorrow's seed lands. Try flipping a second player on the same team to isMatchWicketKeeper=true to see the 'only one is allowed' validation error."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{firebaseIdToken}}",
+            "type": "string"
+          }
+        ]
+      }
     }
   ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{vault:auth_secret_0hwh}}",
+        "type": "string"
+      }
+    ]
+  },
   "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    },
     {
       "listen": "test",
       "script": {
         "type": "text/javascript",
+        "requests": {},
         "exec": [
           "pm.test(\"status is 2xx\", function () {",
           "  pm.expect(pm.response.code).to.be.within(200, 299);",
@@ -140,38 +824,31 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5001/premier-league-af352/us-central1/api",
-      "type": "string"
+      "value": "http://localhost:5001/premier-league-af352/us-central1/api"
     },
     {
       "key": "plainHttpBaseUrl",
-      "value": "http://localhost:8080",
-      "type": "string"
+      "value": "http://localhost:8080"
     },
     {
       "key": "authEmulatorUrl",
-      "value": "http://127.0.0.1:9099",
-      "type": "string"
+      "value": "http://127.0.0.1:9099"
     },
     {
       "key": "firebaseIdToken",
-      "value": "",
-      "type": "string"
+      "value": ""
     },
     {
       "key": "authEmail",
-      "value": "postman@example.test",
-      "type": "string"
+      "value": "postman@example.test"
     },
     {
       "key": "authPassword",
-      "value": "postman-password",
-      "type": "string"
+      "value": "postman-password"
     },
     {
       "key": "playerId",
-      "value": "1",
-      "type": "string"
+      "value": "1"
     }
   ]
 }

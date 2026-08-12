@@ -13,6 +13,9 @@ firebase-debug.*.log*
 # Local emulator data snapshot (Auth users, etc. — see `npm run emulators`)
 .emulator-data/
 
+# Firebase exports (auto-generated)
+firebase-export-*/
+
 # Build output
 functions/lib/
 dist/

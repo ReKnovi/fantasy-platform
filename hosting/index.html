@@ -1,222 +1,2339 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Fantasy Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NPL Fantasy League</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
     <script defer src="/__/firebase/12.16.0/firebase-app-compat.js"></script>
     <script defer src="/__/firebase/12.16.0/firebase-auth-compat.js"></script>
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              background: "#0b1326",
+              surface: "#0b1326",
+              "surface-container-lowest": "#060e20",
+              "surface-container-low": "#131b2e",
+              "surface-container": "#171f33",
+              "surface-container-high": "#222a3d",
+              "surface-container-highest": "#2d3449",
+              "on-surface": "#dae2fd",
+              "on-surface-variant": "#a9b2cf",
+              outline: "#4d5a7a",
+              "outline-variant": "#2d3449",
+              primary: "#ddb7ff",
+              "on-primary": "#490080",
+              "primary-container": "#b76dff",
+              "on-primary-container": "#2c0051",
+              secondary: "#4cd7f6",
+              "on-secondary": "#003640",
+              "secondary-container": "#03b5d3",
+              tertiary: "#ffb2b7",
+              "on-tertiary": "#67001b",
+              "tertiary-container": "#ff516a",
+              error: "#ffb4ab",
+              "on-error": "#690005",
+              "error-container": "#93000a",
+              success: "#7ee0a8",
+              "success-container": "#0d3d24",
+            },
+            fontFamily: {
+              display: ["Epilogue", "sans-serif"],
+              body: ["Geist", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            borderRadius: {none: "0px"},
+          },
+        },
+      };
+    </script>
     <style>
-      :root {
-        color-scheme: light;
-        font-family:
-          Inter,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
+      * {
+        border-radius: 0 !important;
       }
-
       body {
-        margin: 0;
-        background: #f5f7fb;
-        color: #172033;
+        background:
+          radial-gradient(
+            ellipse 120% 80% at 50% -10%,
+            #1a1040 0%,
+            #0b1326 55%
+          ),
+          #0b1326;
       }
-
-      main {
-        width: min(920px, calc(100% - 32px));
-        margin: 48px auto;
+      .glass {
+        background: rgba(23, 31, 51, 0.55);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(218, 226, 253, 0.08);
       }
-
-      header {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        align-items: center;
-        margin-bottom: 28px;
+      .clip-corner {
+        clip-path: polygon(
+          0 0,
+          calc(100% - 14px) 0,
+          100% 14px,
+          100% 100%,
+          0 100%
+        );
       }
-
-      h1 {
-        margin: 0;
-        font-size: 32px;
-        line-height: 1.1;
+      .rarity-bar {
+        height: 2px;
+        background: linear-gradient(90deg, #ddb7ff, #4cd7f6);
       }
-
-      p {
-        color: #4c5b70;
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
       }
-
-      button {
-        border: 0;
-        border-radius: 6px;
-        background: #1663ff;
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #2d3449;
+      }
+      ::selection {
+        background: #b76dff;
         color: #fff;
-        font-weight: 700;
-        padding: 12px 16px;
-        cursor: pointer;
       }
-
-      button.secondary {
-        background: #e8edf7;
-        color: #172033;
+      .tab-active {
+        color: #ddb7ff;
+        border-bottom: 2px solid #ddb7ff;
       }
-
-      button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
+      .admin-tab-active {
+        color: #4cd7f6;
+        border-left: 2px solid #4cd7f6;
+        background: rgba(76, 215, 246, 0.06);
       }
-
-      .panel {
-        background: #fff;
-        border: 1px solid #dce3ee;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 16px;
-      }
-
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 16px;
-      }
-
-      .status {
-        display: grid;
-        gap: 8px;
-      }
-
-      code,
-      pre {
-        font-family: "SFMono-Regular", Consolas, monospace;
-      }
-
-      pre {
-        min-height: 180px;
-        overflow: auto;
-        background: #101725;
-        color: #dce9ff;
-        border-radius: 8px;
-        padding: 16px;
-        white-space: pre-wrap;
-      }
-
-      .muted {
-        color: #6b778c;
+      .input-field {
+        background: #0d1528;
+        border: 1px solid #2d3449;
+        color: #dae2fd;
+        font-family: Geist, sans-serif;
+        padding: 10px 12px;
+        width: 100%;
         font-size: 14px;
+      }
+      .input-field:focus {
+        outline: none;
+        border-color: #4cd7f6;
+        box-shadow: 0 0 0 1px #4cd7f6;
+      }
+      .input-field::placeholder {
+        color: #5b6584;
+      }
+      .btn-primary {
+        background: #b76dff;
+        color: #0b0014;
+        font-weight: 600;
+        padding: 10px 18px;
+        font-size: 14px;
+        transition: all 0.15s;
+      }
+      .btn-primary:hover {
+        background: #ddb7ff;
+        box-shadow: 0 0 20px rgba(221, 183, 255, 0.4);
+      }
+      .btn-primary:disabled {
+        background: #3a3450;
+        color: #6b6482;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      .btn-ghost {
+        background: transparent;
+        border: 1px solid #4cd7f6;
+        color: #4cd7f6;
+        font-weight: 600;
+        padding: 9px 16px;
+        font-size: 14px;
+        transition: all 0.15s;
+      }
+      .btn-ghost:hover {
+        background: rgba(76, 215, 246, 0.08);
+      }
+      .btn-danger {
+        background: transparent;
+        border: 1px solid #ff516a;
+        color: #ffb2b7;
+        font-weight: 600;
+        padding: 9px 16px;
+        font-size: 13px;
+      }
+      .toast {
+        animation: slideIn 0.2s ease-out;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .drawer {
+        transition: transform 0.25s ease;
+      }
+      .msym {
+        font-family: "Material Symbols Outlined";
+        font-weight: 300;
+        font-size: 20px;
+        vertical-align: middle;
       }
     </style>
   </head>
-  <body>
-    <main>
-      <header>
-        <div>
-          <h1>Fantasy Platform</h1>
-          <p>Firebase Auth with Google sign-in and protected API access.</p>
+  <body class="min-h-screen text-on-surface font-body">
+    <header
+      class="border-b border-outline-variant sticky top-0 z-30 bg-background/90 backdrop-blur"
+    >
+      <div
+        class="max-w-[1280px] mx-auto flex items-center justify-between px-6 py-4"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 bg-gradient-to-br from-primary to-secondary clip-corner flex items-center justify-center"
+          >
+            <span class="text-background font-display font-800 text-sm"
+              >NPL</span
+            >
+          </div>
+          <div>
+            <h1
+              class="font-display font-800 text-xl tracking-tight text-primary"
+            >
+              NPL Fantasy
+            </h1>
+            <p
+              id="user-badge"
+              class="text-[10px] font-mono text-on-surface-variant truncate max-w-[180px]"
+            ></p>
+          </div>
         </div>
-      </header>
+        <nav
+          class="hidden lg:flex items-center gap-6 font-body font-600 text-sm text-on-surface-variant"
+          id="main-nav"
+        >
+          <button
+            data-view="squad"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Squad
+          </button>
+          <button
+            data-view="matchday"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Match Day
+          </button>
+          <button
+            data-view="fixtures"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Fixtures
+          </button>
+          <button
+            data-view="players"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Players
+          </button>
+          <button
+            data-view="leagues"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Leagues
+          </button>
+          <button
+            data-view="admin"
+            class="nav-btn pb-1 hover:text-on-surface transition"
+          >
+            Admin
+          </button>
+        </nav>
+        <div class="flex items-center gap-3">
+          <span
+            id="conn-dot"
+            class="w-2 h-2 bg-error"
+            title="Not connected"
+          ></span>
+          <span
+            id="conn-label"
+            class="text-xs font-mono text-on-surface-variant hidden sm:inline"
+            >disconnected</span
+          >
+          <button
+            id="open-settings"
+            class="w-9 h-9 flex items-center justify-center border border-outline-variant hover:border-secondary transition"
+          >
+            <span class="msym">settings</span>
+          </button>
+        </div>
+      </div>
+      <div
+        class="lg:hidden flex flex-wrap justify-around border-t border-outline-variant text-xs font-600"
+        id="main-nav-mobile"
+      >
+        <button data-view="squad" class="nav-btn py-2 px-2">Squad</button>
+        <button data-view="matchday" class="nav-btn py-2 px-2">Match</button>
+        <button data-view="fixtures" class="nav-btn py-2 px-2">Fixtures</button>
+        <button data-view="players" class="nav-btn py-2 px-2">Players</button>
+        <button data-view="leagues" class="nav-btn py-2 px-2">Leagues</button>
+        <button data-view="admin" class="nav-btn py-2 px-2">Admin</button>
+      </div>
+    </header>
 
-      <section class="panel status">
-        <strong id="auth-status">Checking auth state...</strong>
-        <span id="user-detail" class="muted"></span>
-        <div class="actions">
-          <button id="sign-in" type="button">Sign in with Google</button>
-          <button id="sign-out" class="secondary" type="button" disabled>
-            Sign out
+    <div
+      id="settings-backdrop"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden"
+    ></div>
+    <div
+      id="settings-drawer"
+      class="drawer fixed top-0 right-0 h-full w-full sm:w-[440px] bg-surface-container border-l border-outline-variant z-50 translate-x-full overflow-y-auto scrollbar-thin"
+    >
+      <div
+        class="p-6 border-b border-outline-variant flex items-center justify-between sticky top-0 bg-surface-container z-10"
+      >
+        <h2 class="font-display font-800 text-lg text-primary">Connection</h2>
+        <button
+          id="close-settings"
+          class="w-8 h-8 flex items-center justify-center hover:bg-surface-container-high"
+        >
+          <span class="msym">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-6">
+        <div>
+          <label
+            class="text-on-surface-variant block mb-2 text-xs tracking-widest"
+            >API BASE URL</label
+          >
+          <input
+            id="cfg-base"
+            class="input-field"
+            placeholder="http://127.0.0.1:5001/project/us-central1/api"
+          />
+          <p class="text-xs text-on-surface-variant mt-1">
+            Auto-detected on Firebase Hosting. Override for custom deploys.
+          </p>
+        </div>
+        <div class="border-t border-outline-variant pt-5">
+          <label
+            class="text-on-surface-variant block mb-2 text-xs tracking-widest"
+            >FIREBASE AUTH</label
+          >
+          <button
+            id="btn-google-signin"
+            class="btn-primary w-full flex items-center justify-center gap-2"
+          >
+            <span class="msym text-base">login</span> Sign in with Google
           </button>
-          <button id="load-players" type="button" disabled>
-            Load protected players
+          <div
+            id="auth-status"
+            class="text-xs mt-2 text-on-surface-variant"
+          ></div>
+          <label
+            class="text-on-surface-variant block mb-2 mt-3 text-xs tracking-widest"
+            >OR PASTE ID TOKEN</label
+          >
+          <textarea
+            id="cfg-token"
+            class="input-field h-20 font-mono text-xs"
+            placeholder="Firebase ID token"
+          ></textarea>
+        </div>
+        <div class="border-t border-outline-variant pt-5">
+          <label
+            class="text-on-surface-variant block mb-2 text-xs tracking-widest"
+            >DEV AUTH (EMULATOR ONLY)</label
+          >
+          <div class="flex gap-2">
+            <input
+              id="dev-email"
+              class="input-field"
+              placeholder="postman@example.test"
+            />
+            <button
+              id="btn-dev-auth"
+              class="btn-ghost whitespace-nowrap text-xs"
+            >
+              Get Token
+            </button>
+          </div>
+        </div>
+        <div class="border-t border-outline-variant pt-5 flex gap-3">
+          <button id="btn-save-settings" class="btn-primary flex-1">
+            Save & Connect
           </button>
+          <button id="btn-test-conn" class="btn-ghost flex-1">Test</button>
+        </div>
+        <div id="test-conn-result" class="text-xs font-mono"></div>
+      </div>
+    </div>
+
+    <div
+      id="toast-container"
+      class="fixed bottom-5 right-5 z-50 space-y-2 w-[320px]"
+    ></div>
+    <div
+      id="player-modal-backdrop"
+      class="fixed inset-0 bg-black/60 z-40 hidden"
+    ></div>
+    <div
+      id="player-modal"
+      class="fixed inset-x-4 top-[10vh] max-w-lg mx-auto bg-surface-container border border-outline-variant z-50 hidden max-h-[80vh] overflow-y-auto scrollbar-thin"
+    ></div>
+
+    <main class="max-w-[1280px] mx-auto px-6 py-8">
+      <section id="view-squad" class="view">
+        <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h2 class="font-display font-800 text-3xl">Squad Builder</h2>
+            <p class="text-on-surface-variant text-sm mt-1">
+              14 players · 100 credit budget · 8-franchise pool.
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <button id="squad-refresh" class="btn-ghost text-xs">
+              Refresh
+            </button>
+            <button id="squad-save" class="btn-primary">Save Squad</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+          <div>
+            <div class="glass p-4 mb-4 flex flex-wrap gap-3">
+              <input
+                id="filter-search"
+                class="input-field flex-1 min-w-[160px]"
+                placeholder="Search player..."
+              />
+              <select id="filter-position" class="input-field w-auto">
+                <option value="">All Roles</option>
+                <option value="wicket_keeper">WK</option>
+                <option value="batsman">BAT</option>
+                <option value="all_rounder">AR</option>
+                <option value="bowler">BOWL</option>
+              </select>
+              <select id="filter-overseas" class="input-field w-auto">
+                <option value="">Overseas: Any</option>
+                <option value="true">Overseas</option>
+                <option value="false">Domestic</option>
+              </select>
+            </div>
+            <div
+              id="player-pool"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto scrollbar-thin pr-1"
+            >
+              <div
+                class="text-on-surface-variant text-sm p-6 text-center col-span-2"
+              >
+                Connect in Settings, then Refresh.
+              </div>
+            </div>
+          </div>
+          <aside class="glass p-5 h-fit sticky top-24">
+            <h3 class="font-display font-700 text-lg mb-4 text-secondary">
+              Squad Summary
+            </h3>
+            <div class="mb-4">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-on-surface-variant">BUDGET</span
+                ><span id="sum-budget" class="font-mono">0.0 / 100.0</span>
+              </div>
+              <div class="h-1.5 bg-surface-container-high">
+                <div
+                  id="sum-budget-bar"
+                  class="h-1.5 bg-gradient-to-r from-primary to-secondary"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+            <div
+              id="squad-roles"
+              class="grid grid-cols-2 gap-2 text-xs font-mono mb-4"
+            ></div>
+            <div class="text-xs font-mono mb-4 flex justify-between">
+              <span class="text-on-surface-variant">TOTAL</span
+              ><span id="sum-total">0 / 14</span>
+            </div>
+            <div class="text-xs font-mono mb-4 flex justify-between">
+              <span class="text-on-surface-variant">OVERSEAS</span
+              ><span id="sum-overseas">0 (max 4)</span>
+            </div>
+            <div class="text-xs font-mono mb-4">
+              <span class="text-on-surface-variant">FRANCHISES</span>
+              <div id="sum-franchises" class="mt-1 space-y-0.5"></div>
+            </div>
+            <div
+              id="squad-validation"
+              class="text-xs space-y-1 border-t border-outline-variant pt-3"
+            ></div>
+            <h4 class="font-display font-700 text-sm mt-5 mb-2">My Picks</h4>
+            <div
+              id="squad-picks"
+              class="space-y-1 max-h-[240px] overflow-y-auto scrollbar-thin"
+            ></div>
+          </aside>
         </div>
       </section>
 
-      <section class="panel">
-        <strong>API response</strong>
-        <pre id="output">
-Sign in to request /players with a Firebase ID token.</pre>
+      <section id="view-matchday" class="view hidden">
+        <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h2 class="font-display font-800 text-3xl">Match Day Lineup</h2>
+            <p class="text-on-surface-variant text-sm mt-1">
+              Starting XI, bench, captain / vice-captain.
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <select id="md-gameweek" class="input-field w-auto">
+              <option value="">Gameweek…</option>
+            </select>
+            <button id="md-refresh" class="btn-ghost text-xs">Load</button>
+            <button id="md-save" class="btn-primary">Save Lineup</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+          <div id="md-players" class="space-y-2">
+            <div class="text-on-surface-variant text-sm glass p-6 text-center">
+              Select gameweek and Load.
+            </div>
+          </div>
+          <aside
+            class="glass p-5 h-fit sticky top-24 text-xs font-mono space-y-2"
+          >
+            <h3 class="font-display font-700 text-sm mb-3 text-secondary">
+              LINEUP STATUS
+            </h3>
+            <div class="flex justify-between">
+              <span class="text-on-surface-variant">STARTING</span
+              ><span id="md-starting-count">0 / 11</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-on-surface-variant">BENCH</span
+              ><span id="md-bench-count">0 / 3</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-on-surface-variant">CAPTAIN</span
+              ><span id="md-captain-name">—</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-on-surface-variant">VICE</span
+              ><span id="md-vc-name">—</span>
+            </div>
+            <div
+              id="md-validation"
+              class="pt-3 border-t border-outline-variant space-y-1"
+            ></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="view-fixtures" class="view hidden">
+        <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h2 class="font-display font-800 text-3xl">Fixtures</h2>
+            <p class="text-on-surface-variant text-sm mt-1">
+              Gameweeks and scheduled matches.
+            </p>
+          </div>
+          <button id="fx-refresh" class="btn-ghost text-xs">Refresh</button>
+        </div>
+        <div
+          id="fx-current"
+          class="glass p-4 mb-6 text-sm font-mono hidden"
+        ></div>
+        <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          <div class="glass p-4">
+            <h3 class="font-display font-700 text-sm mb-3 text-secondary">
+              GAMEWEEKS
+            </h3>
+            <div
+              id="fx-gameweeks"
+              class="space-y-1 text-xs font-mono max-h-[60vh] overflow-y-auto scrollbar-thin"
+            ></div>
+          </div>
+          <div>
+            <h3 class="font-display font-700 text-sm mb-3">
+              Matches
+              <span
+                id="fx-gw-label"
+                class="text-on-surface-variant font-mono text-xs"
+              ></span>
+            </h3>
+            <div id="fx-matches" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-players" class="view hidden">
+        <div class="flex items-end justify-between flex-wrap gap-4 mb-6">
+          <div>
+            <h2 class="font-display font-800 text-3xl">Players</h2>
+            <p class="text-on-surface-variant text-sm mt-1">
+              Browse pool · click for detail.
+            </p>
+          </div>
+          <button id="pl-refresh" class="btn-ghost text-xs">Refresh</button>
+        </div>
+        <div class="glass p-4 mb-4 flex flex-wrap gap-3">
+          <input
+            id="pl-search"
+            class="input-field flex-1 min-w-[160px]"
+            placeholder="Search..."
+          />
+          <select id="pl-position" class="input-field w-auto">
+            <option value="">All Roles</option>
+            <option value="wicket_keeper">WK</option>
+            <option value="batsman">BAT</option>
+            <option value="all_rounder">AR</option>
+            <option value="bowler">BOWL</option>
+          </select>
+        </div>
+        <div
+          id="pl-list"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        ></div>
+      </section>
+
+      <section id="view-leagues" class="view hidden">
+        <h2 class="font-display font-800 text-3xl mb-2">Leagues</h2>
+        <div class="glass p-8 text-center max-w-xl">
+          <span class="msym text-4xl text-on-surface-variant"
+            >construction</span
+          >
+          <p class="text-on-surface-variant mt-4 text-sm">
+            League routes (<code class="text-secondary">/leagues</code>) are not
+            implemented yet. DB schema exists — API coming soon.
+          </p>
+        </div>
+      </section>
+
+      <section id="view-admin" class="view hidden">
+        <h2 class="font-display font-800 text-3xl mb-1">Admin</h2>
+        <p class="text-on-surface-variant text-sm mb-6">
+          Requires scorer_admin, roster_admin, or super_admin role.
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6">
+          <nav class="glass p-2 space-y-1 text-sm" id="admin-tabs">
+            <button
+              data-admin="scorecard"
+              class="admin-tab w-full text-left px-3 py-2 admin-tab-active"
+            >
+              Scorecard
+            </button>
+            <button
+              data-admin="schedule"
+              class="admin-tab w-full text-left px-3 py-2"
+            >
+              Schedule
+            </button>
+            <button
+              data-admin="teams"
+              class="admin-tab w-full text-left px-3 py-2"
+            >
+              Teams
+            </button>
+            <button
+              data-admin="users"
+              class="admin-tab w-full text-left px-3 py-2"
+            >
+              Users
+            </button>
+          </nav>
+          <div>
+            <div id="admin-scorecard" class="admin-panel">
+              <div class="glass p-5 mb-6 flex flex-wrap gap-3 items-end">
+                <div class="flex-1 min-w-[220px]">
+                  <label class="text-on-surface-variant block mb-2 text-xs"
+                    >MATCH (by gameweek)</label
+                  >
+                  <select id="admin-gw-select" class="input-field mb-2">
+                    <option value="">Gameweek…</option>
+                  </select>
+                  <select id="admin-match-select" class="input-field">
+                    <option value="">Select match…</option>
+                  </select>
+                </div>
+                <button id="admin-load-match" class="btn-ghost">
+                  Load Match
+                </button>
+              </div>
+              <div
+                id="admin-match-info"
+                class="glass p-4 mb-4 text-xs font-mono hidden"
+              ></div>
+              <div id="admin-toss-section" class="glass p-4 mb-4 hidden">
+                <h3 class="font-display font-700 text-sm mb-3 text-secondary">
+                  Toss
+                </h3>
+                <div class="flex gap-2 flex-wrap items-end">
+                  <select
+                    id="admin-toss-winner"
+                    class="input-field w-auto min-w-[200px]"
+                  ></select>
+                  <button id="admin-save-toss" class="btn-ghost text-sm">
+                    Save Toss
+                  </button>
+                </div>
+              </div>
+              <div id="admin-result-section" class="glass p-4 mb-6 hidden">
+                <h3 class="font-display font-700 text-sm mb-3 text-tertiary">
+                  Match Result (Draft)
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <label class="text-on-surface-variant">Status</label
+                    ><select id="admin-result-status" class="input-field mt-1">
+                      <option value="scheduled">scheduled</option>
+                      <option value="completed">completed</option>
+                      <option value="no_result">no_result</option>
+                      <option value="abandoned">abandoned</option>
+                      <option value="dls_adjusted">dls_adjusted</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-on-surface-variant">Winner Team ID</label
+                    ><input
+                      id="admin-winner-id"
+                      type="number"
+                      class="input-field mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-on-surface-variant">Win Margin</label
+                    ><input
+                      id="admin-win-margin"
+                      type="number"
+                      class="input-field mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-on-surface-variant">Margin Type</label
+                    ><select id="admin-margin-type" class="input-field mt-1">
+                      <option value="">—</option>
+                      <option value="runs">runs</option>
+                      <option value="wickets">wickets</option>
+                      <option value="tie">tie</option>
+                      <option value="no_result">no_result</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-on-surface-variant"
+                      >Player of Match ID</label
+                    ><input
+                      id="admin-pom-id"
+                      type="number"
+                      class="input-field mt-1"
+                    />
+                  </div>
+                </div>
+                <button id="admin-save-result" class="btn-ghost text-sm mt-3">
+                  Save Result Draft
+                </button>
+              </div>
+              <div id="admin-xi-section" class="hidden mb-8">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-display font-700 text-lg text-secondary">
+                    Playing XI
+                  </h3>
+                  <button id="admin-save-xi" class="btn-primary text-sm">
+                    Save Playing XI
+                  </button>
+                </div>
+                <div
+                  id="admin-xi-teams"
+                  class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                ></div>
+              </div>
+              <div id="admin-stats-section" class="hidden">
+                <div
+                  class="flex items-center justify-between mb-3 flex-wrap gap-3"
+                >
+                  <h3 class="font-display font-700 text-lg text-tertiary">
+                    Match Stats
+                  </h3>
+                  <div class="flex gap-2">
+                    <button id="admin-save-draft" class="btn-ghost text-sm">
+                      Save Draft
+                    </button>
+                    <button id="admin-publish" class="btn-primary text-sm">
+                      Publish
+                    </button>
+                  </div>
+                </div>
+                <div class="overflow-x-auto glass">
+                  <table class="w-full text-xs font-mono">
+                    <thead
+                      class="bg-surface-container-high text-on-surface-variant sticky top-0"
+                    >
+                      <tr>
+                        <th class="text-left p-2">PLAYER</th>
+                        <th class="p-2">RUNS</th>
+                        <th class="p-2">BALLS</th>
+                        <th class="p-2">4s</th>
+                        <th class="p-2">6s</th>
+                        <th class="p-2">OUT</th>
+                        <th class="p-2">BOWL</th>
+                        <th class="p-2">CONC</th>
+                        <th class="p-2">WKTS</th>
+                        <th class="p-2">MDN</th>
+                        <th class="p-2">CT</th>
+                        <th class="p-2">ST</th>
+                        <th class="p-2">RO-D</th>
+                        <th class="p-2">RO-A</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admin-stats-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div id="admin-schedule" class="admin-panel hidden">
+              <div class="glass p-5 mb-6">
+                <h3 class="font-display font-700 text-lg mb-4 text-primary">
+                  Create Gameweek
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    id="gw-label"
+                    class="input-field"
+                    placeholder="Label e.g. GW 1"
+                  />
+                  <select id="gw-phase" class="input-field">
+                    <option value="group_stage">group_stage</option>
+                    <option value="playoffs">playoffs</option>
+                  </select>
+                  <input
+                    id="gw-deadline"
+                    type="datetime-local"
+                    class="input-field"
+                  />
+                </div>
+                <button id="gw-create" class="btn-primary mt-3 text-sm">
+                  Create Gameweek
+                </button>
+              </div>
+              <div class="glass p-5 mb-6">
+                <h3 class="font-display font-700 text-lg mb-4 text-secondary">
+                  Update Gameweek Status
+                </h3>
+                <div class="flex flex-wrap gap-3 items-end">
+                  <select
+                    id="gw-update-select"
+                    class="input-field w-auto min-w-[200px]"
+                  >
+                    <option value="">Gameweek…</option>
+                  </select>
+                  <label class="flex items-center gap-2 text-xs"
+                    ><input
+                      type="checkbox"
+                      id="gw-finished"
+                      class="accent-primary"
+                    />
+                    finished</label
+                  >
+                  <label class="flex items-center gap-2 text-xs"
+                    ><input
+                      type="checkbox"
+                      id="gw-checked"
+                      class="accent-primary"
+                    />
+                    data_checked</label
+                  >
+                  <button id="gw-update" class="btn-ghost text-sm">
+                    Update
+                  </button>
+                </div>
+              </div>
+              <div class="glass p-5">
+                <h3 class="font-display font-700 text-lg mb-4 text-tertiary">
+                  Schedule Match
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <select id="match-gw" class="input-field">
+                    <option value="">Gameweek (optional)…</option>
+                  </select>
+                  <input
+                    id="match-venue"
+                    class="input-field"
+                    placeholder="Venue"
+                  />
+                  <select id="match-team-a" class="input-field">
+                    <option value="">Team A…</option>
+                  </select>
+                  <select id="match-team-b" class="input-field">
+                    <option value="">Team B…</option>
+                  </select>
+                  <input
+                    id="match-date"
+                    type="datetime-local"
+                    class="input-field md:col-span-2"
+                  />
+                </div>
+                <button id="match-create" class="btn-primary mt-3 text-sm">
+                  Schedule Match
+                </button>
+              </div>
+            </div>
+
+            <div id="admin-teams" class="admin-panel hidden">
+              <div class="glass p-5 mb-6">
+                <h3 class="font-display font-700 text-lg mb-4 text-primary">
+                  Register Team
+                </h3>
+                <div class="flex gap-2 flex-wrap">
+                  <input
+                    id="team-name"
+                    class="input-field flex-1 min-w-[160px]"
+                    placeholder="Full name"
+                  />
+                  <input
+                    id="team-short"
+                    class="input-field w-32"
+                    placeholder="Short"
+                  />
+                  <button id="team-create" class="btn-primary">Create</button>
+                </div>
+              </div>
+              <div id="teams-list" class="space-y-2"></div>
+            </div>
+
+            <div id="admin-users" class="admin-panel hidden">
+              <div class="glass p-5 mb-6">
+                <h3 class="font-display font-700 text-lg mb-2 text-primary">
+                  My Profile
+                </h3>
+                <pre
+                  id="my-profile"
+                  class="text-xs font-mono text-on-surface-variant whitespace-pre-wrap"
+                >
+Load profile after sign-in.</pre>
+                <button id="profile-refresh" class="btn-ghost text-xs mt-3">
+                  Refresh Profile
+                </button>
+              </div>
+              <div class="glass p-5">
+                <h3 class="font-display font-700 text-lg mb-4 text-secondary">
+                  Change User Role
+                </h3>
+                <p class="text-xs text-on-surface-variant mb-3">
+                  super_admin only
+                </p>
+                <div class="flex flex-wrap gap-2 items-end">
+                  <input
+                    id="role-user-id"
+                    class="input-field flex-1 min-w-[200px] font-mono text-xs"
+                    placeholder="User UUID"
+                  />
+                  <select id="role-select" class="input-field w-auto">
+                    <option value="user">user</option>
+                    <option value="scorer_admin">scorer_admin</option>
+                    <option value="roster_admin">roster_admin</option>
+                    <option value="super_admin">super_admin</option>
+                  </select>
+                  <button id="role-save" class="btn-primary text-sm">
+                    Update Role
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
-
+    <footer
+      class="max-w-[1280px] mx-auto px-6 py-10 text-xs text-on-surface-variant border-t border-outline-variant mt-10"
+    >
+      NPL Fantasy League — internal build tool. All routes wired to Express API.
+    </footer>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const authStatus = document.querySelector("#auth-status");
-        const userDetail = document.querySelector("#user-detail");
-        const signInButton = document.querySelector("#sign-in");
-        const signOutButton = document.querySelector("#sign-out");
-        const loadPlayersButton = document.querySelector("#load-players");
-        const output = document.querySelector("#output");
+      const ROLE_REQS = {
+        wicket_keeper: 2,
+        batsman: 4,
+        all_rounder: 3,
+        bowler: 5,
+      };
+      const ROLE_LABEL = {
+        wicket_keeper: "WK",
+        batsman: "BAT",
+        all_rounder: "AR",
+        bowler: "BOWL",
+      };
+      const BUDGET_MAX = 100,
+        SQUAD_SIZE = 14,
+        MAX_OVERSEAS = 4,
+        MAX_PER_FRANCHISE = 3,
+        MIN_FRANCHISES = 5;
+      const START_XI = 11,
+        BENCH_SIZE = 3;
 
-        const app = firebase.app();
-        const auth = firebase.auth();
-        const projectId = app.options.projectId || "premier-league-af352";
-        const localHosts = ["localhost", "127.0.0.1"];
-        const isLocal = localHosts.includes(window.location.hostname);
-        const apiBaseUrl = isLocal
-          ? `http://${window.location.hostname}:5001/${projectId}/us-central1/api`
+      const state = {
+        apiBase: "",
+        idToken: "",
+        currentUser: null,
+        players: [],
+        realTeams: [],
+        squadPicks: [],
+        gameweeks: [],
+        lineupPlayers: [],
+        matches: [],
+        currentMatch: null,
+        xiSelections: {},
+        statsRows: [],
+        selectedFxGw: null,
+      };
+
+      function defaultApiBase() {
+        const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+        let projectId = "premier-league-af352";
+        try {
+          if (typeof firebase !== "undefined" && firebase.apps?.length)
+            projectId = firebase.app().options.projectId || projectId;
+        } catch (_) {}
+        return local
+          ? `http://${location.hostname}:5001/${projectId}/us-central1/api`
           : `https://us-central1-${projectId}.cloudfunctions.net/api`;
+      }
 
-        if (isLocal) {
-          auth.useEmulator("http://127.0.0.1:9099");
+      function loadLocal() {
+        try {
+          const raw = localStorage.getItem("nplf_settings");
+          if (!raw) return;
+          const p = JSON.parse(raw);
+          state.apiBase = p.apiBase || "";
+          state.idToken = p.idToken || "";
+        } catch (e) {
+          console.warn(e);
         }
+      }
+      function saveLocal() {
+        localStorage.setItem(
+          "nplf_settings",
+          JSON.stringify({apiBase: state.apiBase, idToken: state.idToken})
+        );
+      }
 
-        const writeOutput = (value) => {
-          output.textContent =
-            typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      function toast(msg, type = "info") {
+        const colors = {
+          info: "border-secondary text-secondary",
+          error: "border-tertiary text-tertiary",
+          success: "border-success text-success",
         };
+        const el = document.createElement("div");
+        el.className = `toast glass p-3 text-sm border-l-2 ${colors[type] || colors.info}`;
+        el.textContent = msg;
+        document.getElementById("toast-container").appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = "0";
+          el.style.transition = "opacity .3s";
+          setTimeout(() => el.remove(), 300);
+        }, 4000);
+      }
 
-        auth.onAuthStateChanged((user) => {
-          const signedIn = Boolean(user);
-          signInButton.disabled = signedIn;
-          signOutButton.disabled = !signedIn;
-          loadPlayersButton.disabled = !signedIn;
-          authStatus.textContent = signedIn ? "Signed in" : "Signed out";
-          userDetail.textContent = signedIn
-            ? `${user.displayName || "Firebase user"} • ${user.email || user.uid}`
+      function unwrap(body) {
+        if (body && typeof body === "object" && "data" in body)
+          return body.data;
+        return body;
+      }
+
+      async function api(
+        path,
+        {method = "GET", query = {}, body, auth = true} = {}
+      ) {
+        const base = (state.apiBase || defaultApiBase()).replace(/\/$/, "");
+        const qs = new URLSearchParams(
+          Object.entries(query).filter(([, v]) => v !== "" && v != null)
+        );
+        let url = base + path + (qs.toString() ? "?" + qs : "");
+        const headers = {"Content-Type": "application/json"};
+        if (auth && state.idToken)
+          headers.Authorization = "Bearer " + state.idToken;
+        const res = await fetch(url, {
+          method,
+          headers,
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (_) {}
+        if (!res.ok) {
+          const msg =
+            data?.error?.message ||
+            data?.message ||
+            data?.error ||
+            `${res.status} ${res.statusText}`;
+          throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+        }
+        return unwrap(data);
+      }
+
+      function teamName(id) {
+        const t = state.realTeams.find((x) => x.id === id);
+        return t ? t.short_name || t.name : "Team " + id;
+      }
+
+      function fmtCost(v) {
+        return ((v || 0) / 10).toFixed(1);
+      }
+
+      function playerCard(p, {inSquad, onPick, onDetail} = {}) {
+        const btn = onPick
+          ? `<button data-id="${p.id}" class="pick-btn mt-2 text-xs px-2 py-1 border ${inSquad ? "border-tertiary text-tertiary" : "border-primary text-primary"}">${inSquad ? "Remove" : "Add"}</button>`
+          : "";
+        const detail = onDetail
+          ? `<button data-detail="${p.id}" class="text-xs text-secondary mt-2 block">View detail</button>`
+          : "";
+        return `<div class="glass p-3 flex items-center justify-between gap-2">
+    <div class="min-w-0"><div class="rarity-bar mb-2 w-10"></div>
+      <div class="font-600 text-sm truncate">${p.name}</div>
+      <div class="flex gap-2 mt-1 flex-wrap">
+        <span class="text-[10px] font-mono border border-secondary text-secondary px-1">${ROLE_LABEL[p.position] || p.position}</span>
+        ${p.is_overseas ? '<span class="text-[10px] font-mono border border-tertiary text-tertiary px-1">OS</span>' : ""}
+        <span class="text-[10px] font-mono border border-outline text-on-surface-variant px-1">${teamName(p.real_team_id)}</span>
+        ${p.status && p.status !== "available" ? `<span class="text-[10px] font-mono text-tertiary">${p.status}</span>` : ""}
+      </div>${detail}
+    </div>
+    <div class="text-right shrink-0"><div class="font-mono text-sm text-primary">${fmtCost(p.now_cost)}</div>${btn}</div>
+  </div>`;
+      }
+
+      function updateConnStatus(ok) {
+        document.getElementById("conn-dot").className =
+          "w-2 h-2 " + (ok ? "bg-success" : "bg-error");
+        document.getElementById("conn-label").textContent = ok
+          ? "connected"
+          : "disconnected";
+      }
+
+      /* Settings */
+      function openSettings() {
+        document.getElementById("settings-backdrop").classList.remove("hidden");
+        document
+          .getElementById("settings-drawer")
+          .classList.remove("translate-x-full");
+      }
+      function closeSettings() {
+        document.getElementById("settings-backdrop").classList.add("hidden");
+        document
+          .getElementById("settings-drawer")
+          .classList.add("translate-x-full");
+      }
+      document.getElementById("open-settings").onclick = openSettings;
+      document.getElementById("close-settings").onclick = closeSettings;
+      document.getElementById("settings-backdrop").onclick = closeSettings;
+
+      document.getElementById("btn-save-settings").onclick = () => {
+        state.apiBase =
+          document.getElementById("cfg-base").value.trim() || defaultApiBase();
+        state.idToken = document.getElementById("cfg-token").value.trim();
+        saveLocal();
+        toast("Settings saved.", "success");
+        updateConnStatus(!!state.idToken);
+        closeSettings();
+      };
+
+      document.getElementById("btn-test-conn").onclick = async () => {
+        const el = document.getElementById("test-conn-result");
+        el.textContent = "Testing…";
+        state.apiBase =
+          document.getElementById("cfg-base").value.trim() || defaultApiBase();
+        state.idToken =
+          document.getElementById("cfg-token").value.trim() || state.idToken;
+        try {
+          await api("/health", {auth: false});
+          const players = await api("/players", {query: {limit: 1}});
+          el.textContent = `OK — health + ${Array.isArray(players) ? players.length : "?"} players sample`;
+          el.className = "text-xs font-mono text-success";
+          updateConnStatus(true);
+        } catch (e) {
+          el.textContent = "Failed: " + e.message;
+          el.className = "text-xs font-mono text-tertiary";
+          updateConnStatus(false);
+        }
+      };
+
+      document.getElementById("btn-dev-auth").onclick = async () => {
+        const email =
+          document.getElementById("dev-email").value.trim() ||
+          "postman@example.test";
+        try {
+          const r = await api("/dev/auth/id-token", {
+            method: "POST",
+            auth: false,
+            body: {email},
+          });
+          document.getElementById("cfg-token").value = r.idToken;
+          state.idToken = r.idToken;
+          toast("Dev token obtained.", "success");
+          saveLocal();
+        } catch (e) {
+          toast("Dev auth: " + e.message, "error");
+        }
+      };
+
+      async function initFirebaseAuth() {
+        if (typeof firebase === "undefined") return;
+        const auth = firebase.auth();
+        const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+        if (local)
+          try {
+            auth.useEmulator("http://127.0.0.1:9099");
+          } catch (_) {}
+        auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            state.idToken = await user.getIdToken();
+            document.getElementById("cfg-token").value = state.idToken;
+            document.getElementById("auth-status").textContent =
+              `Signed in: ${user.email}`;
+            document.getElementById("auth-status").className =
+              "text-xs mt-2 text-success";
+            saveLocal();
+            updateConnStatus(true);
+            refreshProfile();
+          }
+        });
+        document.getElementById("btn-google-signin").onclick = async () => {
+          try {
+            await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+          } catch (e) {
+            document.getElementById("auth-status").textContent = e.message;
+            document.getElementById("auth-status").className =
+              "text-xs mt-2 text-tertiary";
+          }
+        };
+      }
+
+      async function refreshProfile() {
+        if (!state.idToken) return;
+        try {
+          state.currentUser = await api("/users/me");
+          const u = state.currentUser;
+          document.getElementById("user-badge").textContent = u
+            ? `${u.display_name || u.phone_or_email} · ${u.role}`
             : "";
-        });
+          document.getElementById("my-profile").textContent = JSON.stringify(
+            u,
+            null,
+            2
+          );
+        } catch (e) {
+          /* not signed in yet */
+        }
+      }
+      document.getElementById("profile-refresh").onclick = refreshProfile;
 
-        signInButton.addEventListener("click", async () => {
-          try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithPopup(provider);
-          } catch (err) {
-            console.error(err);
-            writeOutput(err.message || "Google sign-in failed");
+      document.getElementById("role-save").onclick = async () => {
+        const id = document.getElementById("role-user-id").value.trim();
+        const role = document.getElementById("role-select").value;
+        if (!id) {
+          toast("Enter user UUID.", "error");
+          return;
+        }
+        try {
+          const u = await api(`/users/${id}/role`, {
+            method: "PATCH",
+            body: {role},
+          });
+          toast(`Role updated: ${u.role}`, "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      /* Nav */
+      function setView(name) {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.add("hidden"));
+        document.getElementById("view-" + name)?.classList.remove("hidden");
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) =>
+            b.classList.toggle("tab-active", b.dataset.view === name)
+          );
+        location.hash = name;
+      }
+      document
+        .querySelectorAll(".nav-btn")
+        .forEach((b) =>
+          b.addEventListener("click", () => setView(b.dataset.view))
+        );
+
+      function setAdminTab(name) {
+        document
+          .querySelectorAll(".admin-panel")
+          .forEach((p) => p.classList.add("hidden"));
+        document.getElementById("admin-" + name)?.classList.remove("hidden");
+        document
+          .querySelectorAll(".admin-tab")
+          .forEach((t) =>
+            t.classList.toggle("admin-tab-active", t.dataset.admin === name)
+          );
+      }
+      document
+        .querySelectorAll(".admin-tab")
+        .forEach((t) =>
+          t.addEventListener("click", () => setAdminTab(t.dataset.admin))
+        );
+
+      /* Data loaders */
+      async function loadRealTeams() {
+        state.realTeams = (await api("/real-teams")) || [];
+        return state.realTeams;
+      }
+
+      async function loadPlayers() {
+        state.players = (await api("/players")) || [];
+        return state.players;
+      }
+
+      async function loadGameweeks() {
+        state.gameweeks = (await api("/gameweeks")) || [];
+        return state.gameweeks;
+      }
+
+      function fillGameweekSelects() {
+        const opts = state.gameweeks
+          .map(
+            (g) => `<option value="${g.id}">${g.label} (${g.phase})</option>`
+          )
+          .join("");
+        [
+          "md-gameweek",
+          "admin-gw-select",
+          "gw-update-select",
+          "match-gw",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const first =
+            el.querySelector("option")?.outerHTML ||
+            '<option value="">…</option>';
+          el.innerHTML = first + opts;
+        });
+      }
+
+      function squadPlayerFromRow(row) {
+        return {
+          id: row.player_id ?? row.id,
+          name: row.name,
+          position: row.position,
+          real_team_id: row.real_team_id,
+          is_overseas: row.is_overseas,
+          now_cost: row.now_cost ?? row.purchase_price,
+        };
+      }
+
+      async function loadMySquad() {
+        try {
+          const squad = await api("/squad");
+          if (Array.isArray(squad) && squad.length) {
+            state.squadPicks = squad.map(squadPlayerFromRow);
+            renderSquadSummary();
           }
-        });
+        } catch (_) {}
+      }
 
-        signOutButton.addEventListener("click", async () => {
-          await auth.signOut();
-          writeOutput("Signed out.");
+      /* Squad builder */
+      function renderPlayerPool() {
+        const q = document.getElementById("filter-search").value.toLowerCase();
+        const pos = document.getElementById("filter-position").value;
+        const overseas = document.getElementById("filter-overseas").value;
+        const picked = new Set(state.squadPicks.map((p) => p.id));
+        const filtered = state.players.filter((p) => {
+          if (q && !p.name.toLowerCase().includes(q)) return false;
+          if (pos && p.position !== pos) return false;
+          if (overseas === "true" && !p.is_overseas) return false;
+          if (overseas === "false" && p.is_overseas) return false;
+          return true;
         });
+        const el = document.getElementById("player-pool");
+        if (!filtered.length) {
+          el.innerHTML =
+            '<div class="text-on-surface-variant text-sm p-6 text-center col-span-2">No players match.</div>';
+          return;
+        }
+        el.innerHTML = filtered
+          .map((p) => playerCard(p, {inSquad: picked.has(p.id), onPick: true}))
+          .join("");
+        el.querySelectorAll(".pick-btn").forEach(
+          (btn) =>
+            (btn.onclick = () => {
+              const id = Number(btn.dataset.id);
+              const idx = state.squadPicks.findIndex((p) => p.id === id);
+              if (idx >= 0) state.squadPicks.splice(idx, 1);
+              else {
+                if (state.squadPicks.length >= SQUAD_SIZE) {
+                  toast("Squad full (14).", "error");
+                  return;
+                }
+                state.squadPicks.push(state.players.find((p) => p.id === id));
+              }
+              renderPlayerPool();
+              renderSquadSummary();
+            })
+        );
+      }
 
-        loadPlayersButton.addEventListener("click", async () => {
-          const user = auth.currentUser;
-          if (!user) {
-            writeOutput("Sign in first.");
-            return;
+      function renderSquadSummary() {
+        const picks = state.squadPicks;
+        const totalCost = picks.reduce((s, p) => s + (p.now_cost || 0), 0);
+        document.getElementById("sum-budget").textContent =
+          `${fmtCost(totalCost)} / ${BUDGET_MAX.toFixed(1)}`;
+        document.getElementById("sum-budget-bar").style.width =
+          Math.min(100, (totalCost / 10 / BUDGET_MAX) * 100) + "%";
+        document.getElementById("sum-total").textContent =
+          `${picks.length} / ${SQUAD_SIZE}`;
+        document.getElementById("sum-overseas").textContent =
+          `${picks.filter((p) => p.is_overseas).length} (max ${MAX_OVERSEAS})`;
+        const roleCounts = Object.fromEntries(
+          Object.keys(ROLE_REQS).map((r) => [
+            r,
+            picks.filter((p) => p.position === r).length,
+          ])
+        );
+        document.getElementById("squad-roles").innerHTML = Object.entries(
+          ROLE_REQS
+        )
+          .map(([role, req]) => {
+            const c = roleCounts[role];
+            return `<div class="${c === req ? "text-success" : ""}">${ROLE_LABEL[role]} <span class="float-right">${c}/${req}</span></div>`;
+          })
+          .join("");
+        const fc = {};
+        picks.forEach((p) => {
+          const k = teamName(p.real_team_id);
+          fc[k] = (fc[k] || 0) + 1;
+        });
+        const entries = Object.entries(fc);
+        document.getElementById("sum-franchises").innerHTML = entries.length
+          ? entries
+              .map(
+                ([n, c]) =>
+                  `<div class="flex justify-between ${c > MAX_PER_FRANCHISE ? "text-tertiary" : ""}"><span class="truncate">${n}</span><span>${c}</span></div>`
+              )
+              .join("")
+          : '<div class="text-on-surface-variant">—</div>';
+        const val = [];
+        if (picks.length !== SQUAD_SIZE)
+          val.push(`Need ${SQUAD_SIZE} players (have ${picks.length}).`);
+        Object.entries(ROLE_REQS).forEach(([r, req]) => {
+          if (roleCounts[r] !== req)
+            val.push(`${ROLE_LABEL[r]}: need ${req}, have ${roleCounts[r]}.`);
+        });
+        if (picks.filter((p) => p.is_overseas).length > MAX_OVERSEAS)
+          val.push("Overseas cap exceeded.");
+        if (totalCost / 10 > BUDGET_MAX) val.push("Over budget.");
+        entries.forEach(([n, c]) => {
+          if (c > MAX_PER_FRANCHISE)
+            val.push(`${n}: max ${MAX_PER_FRANCHISE}.`);
+        });
+        if (
+          entries.length &&
+          entries.length < MIN_FRANCHISES &&
+          picks.length === SQUAD_SIZE
+        )
+          val.push(`Min ${MIN_FRANCHISES} franchises.`);
+        document.getElementById("squad-validation").innerHTML = val.length
+          ? val.map((m) => `<div class="text-tertiary">${m}</div>`).join("")
+          : '<div class="text-success">Squad is valid.</div>';
+        document.getElementById("squad-save").disabled =
+          val.length > 0 || !picks.length;
+        document.getElementById("squad-picks").innerHTML = picks.length
+          ? picks
+              .map(
+                (p) =>
+                  `<div class="flex justify-between text-xs font-mono py-1 border-b border-outline-variant/50"><span class="truncate">${p.name}</span><span>${fmtCost(p.now_cost)}</span></div>`
+              )
+              .join("")
+          : '<div class="text-on-surface-variant text-xs">No picks yet.</div>';
+      }
+
+      document
+        .getElementById("filter-search")
+        .addEventListener("input", renderPlayerPool);
+      document
+        .getElementById("filter-position")
+        .addEventListener("change", renderPlayerPool);
+      document
+        .getElementById("filter-overseas")
+        .addEventListener("change", renderPlayerPool);
+
+      document.getElementById("squad-refresh").onclick = async () => {
+        if (!state.idToken) {
+          toast("Sign in first.", "error");
+          openSettings();
+          return;
+        }
+        try {
+          await loadRealTeams();
+          await loadPlayers();
+          await loadMySquad();
+          toast(`Loaded ${state.players.length} players.`, "success");
+          renderPlayerPool();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      document.getElementById("squad-save").onclick = async () => {
+        try {
+          await api("/squad", {
+            method: "POST",
+            body: {playerIds: state.squadPicks.map((p) => p.id)},
+          });
+          toast("Squad saved.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+    </script>
+    <script>
+      /* Match Day */
+      async function loadMatchDay() {
+        const gwId = document.getElementById("md-gameweek").value;
+        if (!gwId) {
+          toast("Pick gameweek.", "error");
+          return;
+        }
+        const squad = await api("/squad");
+        const squadPlayers = (squad || []).map(squadPlayerFromRow);
+        let existing = [];
+        try {
+          existing =
+            (await api("/squad-selection", {query: {gameweekId: gwId}})) || [];
+        } catch (_) {}
+        state.lineupPlayers = squadPlayers.map((p) => {
+          const ex = existing.find((s) => (s.player_id ?? s.playerId) === p.id);
+          return {
+            ...p,
+            isStarting: ex ? !!(ex.is_starting ?? ex.isStarting) : false,
+            benchOrder: ex ? (ex.bench_order ?? ex.benchOrder) : null,
+            isCaptain: ex ? !!(ex.is_captain ?? ex.isCaptain) : false,
+            isViceCaptain: ex
+              ? !!(ex.is_vice_captain ?? ex.isViceCaptain)
+              : false,
+          };
+        });
+        renderMatchDay();
+        toast(`Loaded ${state.lineupPlayers.length} players.`, "success");
+      }
+
+      function renderMatchDay() {
+        const el = document.getElementById("md-players");
+        if (!state.lineupPlayers.length) {
+          el.innerHTML =
+            '<div class="text-on-surface-variant text-sm glass p-6 text-center">No squad loaded.</div>';
+          return;
+        }
+        el.innerHTML = state.lineupPlayers
+          .map(
+            (p) => `
+    <div class="glass p-3 flex items-center gap-3 flex-wrap">
+      <label class="flex items-center gap-2 w-40 shrink-0">
+        <input type="checkbox" data-action="starting" data-id="${p.id}" ${p.isStarting ? "checked" : ""} class="accent-primary" />
+        <span class="text-sm font-600 truncate">${p.name}</span>
+      </label>
+      <span class="text-[10px] font-mono border border-secondary text-secondary px-1">${ROLE_LABEL[p.position]}</span>
+      <label class="flex items-center gap-1 text-xs ml-auto"><input type="radio" name="captain" data-action="captain" data-id="${p.id}" ${p.isCaptain ? "checked" : ""} class="accent-primary" /> C</label>
+      <label class="flex items-center gap-1 text-xs"><input type="radio" name="vice" data-action="vice" data-id="${p.id}" ${p.isViceCaptain ? "checked" : ""} class="accent-secondary" /> VC</label>
+    </div>`
+          )
+          .join("");
+        el.querySelectorAll('[data-action="starting"]').forEach(
+          (cb) =>
+            (cb.onchange = () => {
+              const p = state.lineupPlayers.find(
+                (x) => x.id === Number(cb.dataset.id)
+              );
+              p.isStarting = cb.checked;
+              if (!cb.checked) {
+                p.isCaptain = false;
+                p.isViceCaptain = false;
+              }
+              renderMatchDay();
+              updateMatchDaySummary();
+            })
+        );
+        el.querySelectorAll('[data-action="captain"]').forEach(
+          (r) =>
+            (r.onchange = () => {
+              state.lineupPlayers.forEach((p) => (p.isCaptain = false));
+              const p = state.lineupPlayers.find(
+                (x) => x.id === Number(r.dataset.id)
+              );
+              p.isCaptain = true;
+              p.isStarting = true;
+              renderMatchDay();
+              updateMatchDaySummary();
+            })
+        );
+        el.querySelectorAll('[data-action="vice"]').forEach(
+          (r) =>
+            (r.onchange = () => {
+              state.lineupPlayers.forEach((p) => (p.isViceCaptain = false));
+              const p = state.lineupPlayers.find(
+                (x) => x.id === Number(r.dataset.id)
+              );
+              p.isViceCaptain = true;
+              p.isStarting = true;
+              renderMatchDay();
+              updateMatchDaySummary();
+            })
+        );
+        updateMatchDaySummary();
+      }
+
+      function updateMatchDaySummary() {
+        const starting = state.lineupPlayers.filter((p) => p.isStarting);
+        document.getElementById("md-starting-count").textContent =
+          `${starting.length} / ${START_XI}`;
+        document.getElementById("md-bench-count").textContent =
+          `${state.lineupPlayers.length - starting.length} / ${BENCH_SIZE}`;
+        const cap = state.lineupPlayers.find((p) => p.isCaptain);
+        const vc = state.lineupPlayers.find((p) => p.isViceCaptain);
+        document.getElementById("md-captain-name").textContent =
+          cap?.name || "—";
+        document.getElementById("md-vc-name").textContent = vc?.name || "—";
+        const errs = [];
+        if (starting.length !== START_XI)
+          errs.push(
+            `Starting XI must be ${START_XI} (have ${starting.length}).`
+          );
+        if (!cap) errs.push("No captain.");
+        if (!vc) errs.push("No vice-captain.");
+        if (cap && vc && cap.id === vc.id) errs.push("C and VC must differ.");
+        document.getElementById("md-validation").innerHTML = errs.length
+          ? errs.map((m) => `<div class="text-tertiary">${m}</div>`).join("")
+          : '<div class="text-success">Lineup valid.</div>';
+        document.getElementById("md-save").disabled = errs.length > 0;
+      }
+
+      document.getElementById("md-refresh").onclick = async () => {
+        try {
+          if (!state.gameweeks.length) {
+            await loadGameweeks();
+            fillGameweekSelects();
           }
+          await loadMatchDay();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
 
-          try {
-            const token = await user.getIdToken();
-            const response = await fetch(`${apiBaseUrl}/players`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-            const data = await response.json();
-            writeOutput({
-              status: response.status,
-              data,
-            });
-          } catch (err) {
-            console.error(err);
-            writeOutput(err.message || "Failed to load players");
-          }
+      document.getElementById("md-save").onclick = async () => {
+        const gwId = Number(document.getElementById("md-gameweek").value);
+        let bench = 1;
+        const entries = state.lineupPlayers.map((p) => ({
+          playerId: p.id,
+          isStarting: p.isStarting,
+          benchOrder: p.isStarting ? undefined : bench++,
+          isCaptain: !!p.isCaptain,
+          isViceCaptain: !!p.isViceCaptain,
+        }));
+        try {
+          await api("/squad-selection", {
+            method: "POST",
+            body: {gameweekId: gwId, entries},
+          });
+          toast("Lineup saved.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      /* Fixtures */
+      async function loadFixtures() {
+        await loadGameweeks();
+        fillGameweekSelects();
+        try {
+          const cur = await api("/gameweeks/current");
+          const el = document.getElementById("fx-current");
+          el.classList.remove("hidden");
+          el.innerHTML = `<span class="text-secondary">CURRENT</span> · ${cur.label} · deadline ${new Date(cur.deadline_time).toLocaleString()} · finished=${cur.finished}`;
+          if (!state.selectedFxGw) state.selectedFxGw = cur.id;
+        } catch (_) {
+          document.getElementById("fx-current").classList.add("hidden");
+        }
+        renderFxGameweeks();
+        if (state.selectedFxGw) await loadFxMatches(state.selectedFxGw);
+      }
+
+      function renderFxGameweeks() {
+        document.getElementById("fx-gameweeks").innerHTML = state.gameweeks
+          .map(
+            (g) => `
+    <button data-gw="${g.id}" class="w-full text-left px-2 py-2 border border-outline-variant/40 hover:border-secondary ${state.selectedFxGw === g.id ? "text-secondary border-secondary" : ""}">
+      ${g.label}<br><span class="text-on-surface-variant">${g.phase} · ${g.finished ? "done" : "open"}</span>
+    </button>`
+          )
+          .join("");
+        document
+          .getElementById("fx-gameweeks")
+          .querySelectorAll("button")
+          .forEach(
+            (b) =>
+              (b.onclick = async () => {
+                state.selectedFxGw = Number(b.dataset.gw);
+                renderFxGameweeks();
+                await loadFxMatches(state.selectedFxGw);
+              })
+          );
+      }
+
+      async function loadFxMatches(gwId) {
+        const gw = state.gameweeks.find((g) => g.id === gwId);
+        document.getElementById("fx-gw-label").textContent = gw
+          ? `— ${gw.label}`
+          : "";
+        const matches =
+          (await api("/matches", {query: {gameweekId: gwId}})) || [];
+        document.getElementById("fx-matches").innerHTML = matches.length
+          ? matches
+              .map(
+                (m) => `
+    <div class="glass p-4 text-sm font-mono">
+      <div class="font-600">${teamName(m.team_a_id)} vs ${teamName(m.team_b_id)}</div>
+      <div class="text-on-surface-variant text-xs mt-1">${new Date(m.match_date).toLocaleString()} · ${m.venue || "TBC"}</div>
+      <div class="text-xs mt-2">status: ${m.match_status} · published: ${m.published ? "yes" : "no"}</div>
+    </div>`
+              )
+              .join("")
+          : '<div class="text-on-surface-variant text-sm">No matches scheduled.</div>';
+      }
+
+      document.getElementById("fx-refresh").onclick = () =>
+        loadFixtures().catch((e) => toast(e.message, "error"));
+
+      /* Players browser */
+      function renderPlayersList() {
+        const q = document.getElementById("pl-search").value.toLowerCase();
+        const pos = document.getElementById("pl-position").value;
+        const filtered = state.players.filter((p) => {
+          if (q && !p.name.toLowerCase().includes(q)) return false;
+          if (pos && p.position !== pos) return false;
+          return true;
         });
+        const el = document.getElementById("pl-list");
+        el.innerHTML = filtered.length
+          ? filtered.map((p) => playerCard(p, {onDetail: true})).join("")
+          : '<div class="text-on-surface-variant col-span-3">No players.</div>';
+        el.querySelectorAll("[data-detail]").forEach(
+          (btn) =>
+            (btn.onclick = () => showPlayerDetail(Number(btn.dataset.detail)))
+        );
+      }
+
+      async function showPlayerDetail(id) {
+        try {
+          const p = await api(`/players/${id}`);
+          const modal = document.getElementById("player-modal");
+          document
+            .getElementById("player-modal-backdrop")
+            .classList.remove("hidden");
+          modal.classList.remove("hidden");
+          modal.innerHTML = `<div class="p-6">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="font-display font-800 text-xl text-primary">${p.name}</h3>
+        <button id="close-player-modal" class="msym">close</button>
+      </div>
+      <pre class="text-xs font-mono text-on-surface-variant whitespace-pre-wrap">${JSON.stringify(p, null, 2)}</pre>
+      <p class="text-xs text-on-surface-variant mt-3">Team: ${teamName(p.real_team_id)} · Cost: ${fmtCost(p.now_cost)} · ${p.status}</p>
+    </div>`;
+          document.getElementById("close-player-modal").onclick =
+            closePlayerModal;
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+      function closePlayerModal() {
+        document
+          .getElementById("player-modal-backdrop")
+          .classList.add("hidden");
+        document.getElementById("player-modal").classList.add("hidden");
+      }
+      document.getElementById("player-modal-backdrop").onclick =
+        closePlayerModal;
+
+      document.getElementById("pl-search").oninput = renderPlayersList;
+      document.getElementById("pl-position").onchange = renderPlayersList;
+      document.getElementById("pl-refresh").onclick = async () => {
+        try {
+          await loadRealTeams();
+          await loadPlayers();
+          renderPlayersList();
+          toast("Players refreshed.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      /* Admin — matches */
+      async function loadAdminGameweeks() {
+        await loadGameweeks();
+        fillGameweekSelects();
+        const teamOpts = state.realTeams
+          .map((t) => `<option value="${t.id}">${t.name}</option>`)
+          .join("");
+        document.getElementById("match-team-a").innerHTML =
+          '<option value="">Team A…</option>' + teamOpts;
+        document.getElementById("match-team-b").innerHTML =
+          '<option value="">Team B…</option>' + teamOpts;
+      }
+
+      document.getElementById("admin-gw-select").onchange = async () => {
+        const gwId = document.getElementById("admin-gw-select").value;
+        const sel = document.getElementById("admin-match-select");
+        sel.innerHTML = '<option value="">Select match…</option>';
+        if (!gwId) return;
+        try {
+          const matches =
+            (await api("/matches", {query: {gameweekId: gwId}})) || [];
+          state.matches = matches;
+          sel.innerHTML += matches
+            .map(
+              (m) =>
+                `<option value="${m.id}">${teamName(m.team_a_id)} vs ${teamName(m.team_b_id)}</option>`
+            )
+            .join("");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      document.getElementById("admin-load-match").onclick = async () => {
+        const id = document.getElementById("admin-match-select").value;
+        if (!id) {
+          toast("Select match.", "error");
+          return;
+        }
+        try {
+          if (!state.players.length) await loadPlayers();
+          if (!state.realTeams.length) await loadRealTeams();
+          state.currentMatch = await api(`/matches/${id}`);
+          renderAdminMatchInfo();
+          await loadExistingXi();
+          document
+            .getElementById("admin-xi-section")
+            .classList.remove("hidden");
+          document
+            .getElementById("admin-toss-section")
+            .classList.remove("hidden");
+          document
+            .getElementById("admin-result-section")
+            .classList.remove("hidden");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      function renderAdminMatchInfo() {
+        const m = state.currentMatch;
+        document.getElementById("admin-match-info").classList.remove("hidden");
+        document.getElementById("admin-match-info").innerHTML =
+          `${teamName(m.team_a_id)} vs ${teamName(m.team_b_id)} · ${new Date(m.match_date).toLocaleString()} · ${m.match_status} · published=${m.published}`;
+        const tossSel = document.getElementById("admin-toss-winner");
+        tossSel.innerHTML = `<option value="${m.team_a_id}">${teamName(m.team_a_id)}</option><option value="${m.team_b_id}">${teamName(m.team_b_id)}</option>`;
+        if (m.toss_winner_id) tossSel.value = m.toss_winner_id;
+      }
+
+      function playersForTeam(teamId) {
+        return state.players.filter((p) => p.real_team_id === teamId);
+      }
+
+      async function loadExistingXi() {
+        const m = state.currentMatch;
+        state.xiSelections = {};
+        try {
+          const xi = (await api("/playing-xi", {query: {matchId: m.id}})) || [];
+          xi.forEach((row) => {
+            state.xiSelections[row.player_id] = {
+              selected: true,
+              isWK: !!row.is_match_wicket_keeper,
+              realTeamId: row.real_team_id,
+            };
+          });
+        } catch (_) {}
+        try {
+          const stats =
+            (await api("/player-match-stats", {query: {matchId: m.id}})) || [];
+          if (stats.length) {
+            buildStatsFromRows(stats);
+            document
+              .getElementById("admin-stats-section")
+              .classList.remove("hidden");
+          }
+        } catch (_) {}
+        renderAdminXI();
+      }
+
+      function renderAdminXI() {
+        const m = state.currentMatch;
+        const block = (label, teamId) => {
+          const players = playersForTeam(teamId);
+          return `<div class="glass p-4"><h4 class="font-display font-700 text-sm mb-3 text-secondary">${label}</h4>
+      <div class="space-y-1 max-h-[320px] overflow-y-auto scrollbar-thin">${
+        players.length
+          ? players
+              .map((p) => {
+                const sel = state.xiSelections[p.id] || {};
+                return `<label class="flex items-center justify-between text-xs py-1.5 border-b border-outline-variant/40">
+          <span class="flex items-center gap-2"><input type="checkbox" data-xi="${p.id}" data-team="${teamId}" ${sel.selected ? "checked" : ""} class="accent-primary" /> ${p.name}</span>
+          <span class="text-on-surface-variant">WK <input type="checkbox" data-xi-wk="${p.id}" data-team="${teamId}" ${sel.isWK ? "checked" : ""} class="accent-secondary" /></span>
+        </label>`;
+              })
+              .join("")
+          : '<div class="text-on-surface-variant text-xs">No players for this franchise.</div>'
+      }
+      </div></div>`;
+        };
+        document.getElementById("admin-xi-teams").innerHTML =
+          block(teamName(m.team_a_id), m.team_a_id) +
+          block(teamName(m.team_b_id), m.team_b_id);
+        document
+          .getElementById("admin-xi-teams")
+          .querySelectorAll("[data-xi]")
+          .forEach(
+            (cb) =>
+              (cb.onchange = () => {
+                const id = cb.dataset.xi;
+                state.xiSelections[id] = state.xiSelections[id] || {
+                  realTeamId: Number(cb.dataset.team),
+                };
+                state.xiSelections[id].selected = cb.checked;
+                state.xiSelections[id].realTeamId = Number(cb.dataset.team);
+              })
+          );
+        document
+          .getElementById("admin-xi-teams")
+          .querySelectorAll("[data-xi-wk]")
+          .forEach(
+            (cb) =>
+              (cb.onchange = () => {
+                const id = cb.dataset.xi;
+                state.xiSelections[id] = state.xiSelections[id] || {
+                  selected: false,
+                  realTeamId: Number(cb.dataset.team),
+                };
+                state.xiSelections[id].isWK = cb.checked;
+              })
+          );
+      }
+
+      document.getElementById("admin-save-xi").onclick = async () => {
+        const matchId = state.currentMatch?.id;
+        const entries = Object.entries(state.xiSelections)
+          .filter(([, v]) => v.selected)
+          .map(([playerId, v]) => ({
+            playerId: Number(playerId),
+            realTeamId: v.realTeamId,
+            isMatchWicketKeeper: !!v.isWK,
+          }));
+        if (!entries.length) {
+          toast("Select players.", "error");
+          return;
+        }
+        try {
+          await api("/playing-xi", {method: "POST", body: {matchId, entries}});
+          toast("Playing XI saved.", "success");
+          buildStatsRows(entries.map((e) => e.playerId));
+          document
+            .getElementById("admin-stats-section")
+            .classList.remove("hidden");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      document.getElementById("admin-save-toss").onclick = async () => {
+        const id = state.currentMatch?.id;
+        const tossWinnerId = Number(
+          document.getElementById("admin-toss-winner").value
+        );
+        try {
+          state.currentMatch = await api(`/matches/${id}/toss`, {
+            method: "PATCH",
+            body: {tossWinnerId},
+          });
+          toast("Toss saved.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      document.getElementById("admin-save-result").onclick = async () => {
+        const id = state.currentMatch?.id;
+        const body = {
+          matchStatus: document.getElementById("admin-result-status").value,
+          winnerTeamId: document.getElementById("admin-winner-id").value
+            ? Number(document.getElementById("admin-winner-id").value)
+            : undefined,
+          winMargin: document.getElementById("admin-win-margin").value
+            ? Number(document.getElementById("admin-win-margin").value)
+            : undefined,
+          winMarginType:
+            document.getElementById("admin-margin-type").value || undefined,
+          playerOfMatchId: document.getElementById("admin-pom-id").value
+            ? Number(document.getElementById("admin-pom-id").value)
+            : undefined,
+        };
+        try {
+          state.currentMatch = await api(`/matches/${id}/result`, {
+            method: "PATCH",
+            body,
+          });
+          toast("Result draft saved.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      function buildStatsRows(playerIds) {
+        state.statsRows = playerIds.map((id) => {
+          const p = state.players.find((x) => x.id === id) || {
+            name: "Player " + id,
+          };
+          return {
+            playerId: id,
+            name: p.name,
+            runs: 0,
+            ballsFaced: 0,
+            fours: 0,
+            sixes: 0,
+            isBattingDismissal: false,
+            legalBallsBowled: 0,
+            runsConceded: 0,
+            wickets: 0,
+            maidens: 0,
+            catchesTaken: 0,
+            stumpings: 0,
+            runOutsDirect: 0,
+            runOutsAssist: 0,
+          };
+        });
+        renderStatsTable();
+      }
+
+      function buildStatsFromRows(rows) {
+        state.statsRows = rows.map((r) => ({
+          playerId: r.player_id,
+          name:
+            state.players.find((p) => p.id === r.player_id)?.name ||
+            "Player " + r.player_id,
+          runs: r.runs,
+          ballsFaced: r.balls_faced,
+          fours: r.fours,
+          sixes: r.sixes,
+          isBattingDismissal: r.is_batting_dismissal,
+          legalBallsBowled: r.legal_balls_bowled,
+          runsConceded: r.runs_conceded,
+          wickets: r.wickets,
+          maidens: r.maidens,
+          catchesTaken: r.catches_taken,
+          stumpings: r.stumpings,
+          runOutsDirect: r.run_outs_direct,
+          runOutsAssist: r.run_outs_assist,
+        }));
+        renderStatsTable();
+      }
+
+      function numInput(row, field) {
+        return `<input type="number" min="0" data-pid="${row.playerId}" data-field="${field}" value="${row[field]}" class="input-field w-14 text-center py-1 text-xs" />`;
+      }
+
+      function renderStatsTable() {
+        const body = document.getElementById("admin-stats-body");
+        body.innerHTML = state.statsRows
+          .map(
+            (row) => `<tr class="border-t border-outline-variant/40">
+    <td class="p-2 text-left whitespace-nowrap">${row.name}</td>
+    <td class="p-1">${numInput(row, "runs")}</td><td class="p-1">${numInput(row, "ballsFaced")}</td>
+    <td class="p-1">${numInput(row, "fours")}</td><td class="p-1">${numInput(row, "sixes")}</td>
+    <td class="p-1 text-center"><input type="checkbox" data-pid="${row.playerId}" data-field="isBattingDismissal" ${row.isBattingDismissal ? "checked" : ""} class="accent-tertiary" /></td>
+    <td class="p-1">${numInput(row, "legalBallsBowled")}</td><td class="p-1">${numInput(row, "runsConceded")}</td>
+    <td class="p-1">${numInput(row, "wickets")}</td><td class="p-1">${numInput(row, "maidens")}</td>
+    <td class="p-1">${numInput(row, "catchesTaken")}</td><td class="p-1">${numInput(row, "stumpings")}</td>
+    <td class="p-1">${numInput(row, "runOutsDirect")}</td><td class="p-1">${numInput(row, "runOutsAssist")}</td>
+  </tr>`
+          )
+          .join("");
+        body.querySelectorAll("[data-field]").forEach(
+          (inp) =>
+            (inp.onchange = () => {
+              const row = state.statsRows.find(
+                (r) => r.playerId === Number(inp.dataset.pid)
+              );
+              row[inp.dataset.field] =
+                inp.type === "checkbox" ? inp.checked : Number(inp.value);
+            })
+        );
+      }
+
+      async function submitStats(publish) {
+        const matchId = state.currentMatch?.id;
+        const stats = state.statsRows.map((r) => ({
+          playerId: r.playerId,
+          runs: r.runs,
+          ballsFaced: r.ballsFaced,
+          fours: r.fours,
+          sixes: r.sixes,
+          isBattingDismissal: r.isBattingDismissal,
+          legalBallsBowled: r.legalBallsBowled,
+          runsConceded: r.runsConceded,
+          wickets: r.wickets,
+          maidens: r.maidens,
+          catchesTaken: r.catchesTaken,
+          stumpings: r.stumpings,
+          runOutsDirect: r.runOutsDirect,
+          runOutsAssist: r.runOutsAssist,
+        }));
+        try {
+          await api("/player-match-stats/bulk", {
+            method: "POST",
+            body: {matchId, stats},
+          });
+          if (publish) {
+            await api(`/matches/${matchId}/publish`, {method: "POST"});
+            toast("Published.", "success");
+          } else toast("Draft saved.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+      document.getElementById("admin-save-draft").onclick = () =>
+        submitStats(false);
+      document.getElementById("admin-publish").onclick = () =>
+        submitStats(true);
+    </script>
+    <script>
+      /* Admin — schedule */
+      document.getElementById("gw-create").onclick = async () => {
+        const label = document.getElementById("gw-label").value.trim();
+        const phase = document.getElementById("gw-phase").value;
+        const dt = document.getElementById("gw-deadline").value;
+        if (!label || !dt) {
+          toast("Label and deadline required.", "error");
+          return;
+        }
+        try {
+          await api("/gameweeks", {
+            method: "POST",
+            body: {label, phase, deadlineTime: new Date(dt).toISOString()},
+          });
+          toast("Gameweek created.", "success");
+          await loadAdminGameweeks();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      document.getElementById("gw-update").onclick = async () => {
+        const id = document.getElementById("gw-update-select").value;
+        if (!id) {
+          toast("Select gameweek.", "error");
+          return;
+        }
+        try {
+          await api(`/gameweeks/${id}`, {
+            method: "PATCH",
+            body: {
+              finished: document.getElementById("gw-finished").checked,
+              dataChecked: document.getElementById("gw-checked").checked,
+            },
+          });
+          toast("Gameweek updated.", "success");
+          await loadGameweeks();
+          fillGameweekSelects();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      document.getElementById("match-create").onclick = async () => {
+        const teamAId = Number(document.getElementById("match-team-a").value);
+        const teamBId = Number(document.getElementById("match-team-b").value);
+        const matchDate = document.getElementById("match-date").value;
+        const gw = document.getElementById("match-gw").value;
+        const venue = document.getElementById("match-venue").value.trim();
+        if (!teamAId || !teamBId || !matchDate) {
+          toast("Teams and date required.", "error");
+          return;
+        }
+        try {
+          await api("/matches", {
+            method: "POST",
+            body: {
+              gameweekId: gw ? Number(gw) : undefined,
+              teamAId,
+              teamBId,
+              matchDate: new Date(matchDate).toISOString(),
+              venue: venue || undefined,
+            },
+          });
+          toast("Match scheduled.", "success");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      /* Admin — teams */
+      async function renderTeamsList() {
+        await loadRealTeams();
+        document.getElementById("teams-list").innerHTML = state.realTeams
+          .map(
+            (t) => `
+    <div class="glass p-4 flex flex-wrap items-center justify-between gap-3">
+      <div><div class="font-600">${t.name}</div><div class="text-xs font-mono text-on-surface-variant">${t.short_name || "—"} · ${t.status}</div></div>
+      <div class="flex gap-2">
+        <button data-team-detail="${t.id}" class="btn-ghost text-xs">Detail</button>
+        ${
+          t.status === "active"
+            ? `<button data-team-elim="${t.id}" class="btn-danger text-xs">Eliminate</button>`
+            : `<button data-team-active="${t.id}" class="btn-ghost text-xs">Reactivate</button>`
+        }
+      </div>
+    </div>`
+          )
+          .join("");
+        document
+          .getElementById("teams-list")
+          .querySelectorAll("[data-team-detail]")
+          .forEach(
+            (b) =>
+              (b.onclick = async () => {
+                try {
+                  const t = await api(`/real-teams/${b.dataset.teamDetail}`);
+                  toast(JSON.stringify(t), "info");
+                } catch (e) {
+                  toast(e.message, "error");
+                }
+              })
+          );
+        document
+          .getElementById("teams-list")
+          .querySelectorAll("[data-team-elim]")
+          .forEach(
+            (b) =>
+              (b.onclick = () =>
+                setTeamStatus(b.dataset.teamElim, "eliminated"))
+          );
+        document
+          .getElementById("teams-list")
+          .querySelectorAll("[data-team-active]")
+          .forEach(
+            (b) =>
+              (b.onclick = () => setTeamStatus(b.dataset.teamActive, "active"))
+          );
+      }
+
+      async function setTeamStatus(id, status) {
+        try {
+          await api(`/real-teams/${id}/status`, {
+            method: "PATCH",
+            body: {status},
+          });
+          toast(`Team ${status}.`, "success");
+          renderTeamsList();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      document.getElementById("team-create").onclick = async () => {
+        const name = document.getElementById("team-name").value.trim();
+        const shortName = document.getElementById("team-short").value.trim();
+        if (!name) {
+          toast("Name required.", "error");
+          return;
+        }
+        try {
+          await api("/real-teams", {
+            method: "POST",
+            body: {name, shortName: shortName || undefined},
+          });
+          document.getElementById("team-name").value = "";
+          document.getElementById("team-short").value = "";
+          toast("Team created.", "success");
+          renderTeamsList();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      };
+
+      /* Init */
+      function initSettingsFields() {
+        if (!state.apiBase) state.apiBase = defaultApiBase();
+        document.getElementById("cfg-base").value = state.apiBase;
+        document.getElementById("cfg-token").value = state.idToken;
+        updateConnStatus(!!state.idToken);
+      }
+
+      let adminLoaded = false;
+      document.querySelectorAll('[data-view="admin"]').forEach((b) =>
+        b.addEventListener("click", async () => {
+          if (!adminLoaded && state.idToken) {
+            adminLoaded = true;
+            try {
+              await loadRealTeams();
+              await loadAdminGameweeks();
+              renderTeamsList();
+            } catch (e) {
+              console.warn(e);
+            }
+          }
+        })
+      );
+
+      document.querySelectorAll('[data-view="fixtures"]').forEach((b) =>
+        b.addEventListener("click", () => {
+          if (state.idToken)
+            loadFixtures().catch((e) => toast(e.message, "error"));
+        })
+      );
+
+      document.querySelectorAll('[data-view="players"]').forEach((b) =>
+        b.addEventListener("click", async () => {
+          if (state.idToken && !state.players.length) {
+            try {
+              await loadRealTeams();
+              await loadPlayers();
+              renderPlayersList();
+            } catch (e) {
+              toast(e.message, "error");
+            }
+          } else if (state.players.length) renderPlayersList();
+        })
+      );
+
+      document.addEventListener("DOMContentLoaded", () => {
+        loadLocal();
+        initSettingsFields();
+        renderSquadSummary();
+        const v = (location.hash || "#squad").slice(1);
+        setView(
+          [
+            "squad",
+            "matchday",
+            "fixtures",
+            "players",
+            "leagues",
+            "admin",
+          ].includes(v)
+            ? v
+            : "squad"
+        );
+        initFirebaseAuth();
+        if (state.idToken) refreshProfile();
       });
     </script>
   </body>
