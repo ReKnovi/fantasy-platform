@@ -1,5 +1,6 @@
 import {PoolClient} from "pg";
 import {getPool, withTransaction} from "../../database/pool";
+import {conflict} from "../../errors/errors";
 
 export interface TransferRow {
   id: number;
@@ -90,11 +91,31 @@ export async function executeTransfer(params: {
   pointsCost: number;
 }): Promise<TransferRow> {
   return withTransaction(async (client: PoolClient) => {
+    // Serialize concurrent transfers for the same user.
     await client.query(
+      "SELECT 1 FROM squad_players WHERE user_id = $1 FOR UPDATE",
+      [params.userId]
+    );
+    const deleted = await client.query(
       "DELETE FROM squad_players WHERE user_id = $1 AND player_id = $2",
       [params.userId, params.playerOutId]
     );
+    if (deleted.rowCount !== 1) {
+      throw conflict(
+        `Player id ${params.playerOutId} is no longer in your squad`
+      );
+    }
+    await client.query(
+      `INSERT INTO squad_players (user_id, player_id, purchase_price)
+       VALUES ($1, $2, $3)`,
+      [params.userId, params.playerInId, params.purchasePriceIn]
+    );
 
+    if (deleted.rowCount !== 1) {
+      throw conflict(
+        `Player id ${params.playerOutId} is no longer in your squad`
+      );
+    }
     await client.query(
       `INSERT INTO squad_players (user_id, player_id, purchase_price)
        VALUES ($1, $2, $3)`,

@@ -271,7 +271,9 @@ export async function getEffectiveLineup(
   ]);
   const positionById = new Map(playerDetails.map((p) => [p.id, p.position]));
 
-  const starting = selection.filter((s) => s.is_starting);
+  const starting = [...selection.filter((s) => s.is_starting)].sort(
+    (a, b) => a.player_id - b.player_id
+  );
   const bench = [...selection.filter((s) => !s.is_starting)].sort(
     (a, b) => (a.bench_order ?? 0) - (b.bench_order ?? 0)
   );
@@ -302,11 +304,12 @@ export async function getEffectiveLineup(
         slotPlayerId: starter.player_id,
         effectivePlayerId: replacement.player_id,
         wasSubstituted: true,
-        isCaptain: starter.is_captain,
-        isViceCaptain: starter.is_vice_captain,
+        // Captaincy does not transfer to a substitute; the F11 fallback
+        // is resolved by the aggregation job from the original picks.
+        isCaptain: false,
+        isViceCaptain: false,
       };
     }
-
     return {
       slotPlayerId: starter.player_id,
       effectivePlayerId: starter.player_id,

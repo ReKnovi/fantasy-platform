@@ -2,6 +2,7 @@ import {Router, Request, Response} from "express";
 import {findOrCreateUser} from "../users/users.service";
 import {asyncHandler} from "../../middleware/asyncHandler";
 import {badRequest} from "../../errors/errors";
+import {parsePositiveInt} from "../../utils/parsePositiveInt";
 import {
   getEffectiveLineup,
   getSelection,
@@ -17,10 +18,7 @@ export const squadSelectionRouter = Router();
 squadSelectionRouter.get(
   "/",
   asyncHandler(async (req: Request, res: Response) => {
-    const gameweekId = Number(req.query.gameweekId);
-    if (Number.isNaN(gameweekId)) {
-      throw badRequest("gameweekId query param is required");
-    }
+    const gameweekId = parsePositiveInt(req.query.gameweekId, "gameweekId");
 
     const appUser = await findOrCreateUser(res.locals.firebaseUser);
     const selection = await getSelection(appUser.id, gameweekId);
@@ -37,10 +35,7 @@ squadSelectionRouter.get(
 squadSelectionRouter.get(
   "/effective-lineup",
   asyncHandler(async (req: Request, res: Response) => {
-    const gameweekId = Number(req.query.gameweekId);
-    if (Number.isNaN(gameweekId)) {
-      throw badRequest("gameweekId query param is required");
-    }
+    const gameweekId = parsePositiveInt(req.query.gameweekId, "gameweekId");
 
     const appUser = await findOrCreateUser(res.locals.firebaseUser);
     const effective = await getEffectiveLineup(appUser.id, gameweekId);
@@ -55,10 +50,8 @@ squadSelectionRouter.post(
   "/",
   asyncHandler(async (req: Request, res: Response) => {
     const {gameweekId, entries} = req.body ?? {};
+    const parsedGameweekId = parsePositiveInt(gameweekId, "gameweekId");
 
-    if (typeof gameweekId !== "number") {
-      throw badRequest("gameweekId is required");
-    }
     if (!Array.isArray(entries) || entries.length === 0) {
       throw badRequest("entries must be a non-empty array");
     }
@@ -84,7 +77,11 @@ squadSelectionRouter.post(
     }
 
     const appUser = await findOrCreateUser(res.locals.firebaseUser);
-    const selection = await setLineup(appUser.id, gameweekId, parsedEntries);
+    const selection = await setLineup(
+      appUser.id,
+      parsedGameweekId,
+      parsedEntries
+    );
     res.status(201).json({data: selection});
   })
 );
@@ -97,23 +94,22 @@ squadSelectionRouter.post(
   "/swap",
   asyncHandler(async (req: Request, res: Response) => {
     const {gameweekId, startingPlayerId, benchPlayerId} = req.body ?? {};
-
-    if (
-      typeof gameweekId !== "number" ||
-      typeof startingPlayerId !== "number" ||
-      typeof benchPlayerId !== "number"
-    ) {
-      throw badRequest(
-        "gameweekId, startingPlayerId, and benchPlayerId are all required numbers"
-      );
-    }
+    const parsedGameweekId = parsePositiveInt(gameweekId, "gameweekId");
+    const parsedStartingPlayerId = parsePositiveInt(
+      startingPlayerId,
+      "startingPlayerId"
+    );
+    const parsedBenchPlayerId = parsePositiveInt(
+      benchPlayerId,
+      "benchPlayerId"
+    );
 
     const appUser = await findOrCreateUser(res.locals.firebaseUser);
     const selection = await swapLineupPlayers(
       appUser.id,
-      gameweekId,
-      startingPlayerId,
-      benchPlayerId
+      parsedGameweekId,
+      parsedStartingPlayerId,
+      parsedBenchPlayerId
     );
     res.status(201).json({data: selection});
   })

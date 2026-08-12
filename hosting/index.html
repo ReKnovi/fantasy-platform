@@ -1541,12 +1541,25 @@ Load profile after sign-in.</pre>
           }
           renderMySquadList();
           return state.mySquadRows;
-        } catch (_) {
+        } catch (err) {
           state.mySquadRows = [];
           renderMySquadList();
-          return [];
+          throw err;
         }
       }
+
+      const esc = (v) =>
+        String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&`#39`;",
+            })[c]
+        );
 
       function renderMySquadList() {
         const el = document.getElementById("my-squad-list");
@@ -1561,9 +1574,9 @@ Load profile after sign-in.</pre>
               ? '<span class="text-tertiary">FORCED TRANSFER</span>'
               : "";
             return `<div class="glass p-3 flex flex-wrap justify-between gap-2">
-            <div><span class="font-600">${row.name}</span>
-              <span class="text-on-surface-variant ml-2">${ROLE_LABEL[row.position]}</span> ${pending}</div>
-            <div class="text-on-surface-variant">id ${row.player_id} · bought ${fmtCost(row.purchase_price)} · now ${fmtCost(row.now_cost)} · ${teamName(row.real_team_id)}</div>
+            <div><span class="font-600">${esc(row.name)}</span>
+              <span class="text-on-surface-variant ml-2">${esc(ROLE_LABEL[row.position])}</span> ${pending}</div>
+            <div class="text-on-surface-variant">id ${Number(row.player_id)} · bought ${esc(fmtCost(row.purchase_price))} · now ${esc(fmtCost(row.now_cost))} · ${esc(teamName(row.real_team_id))}</div>
           </div>`;
           })
           .join("");
