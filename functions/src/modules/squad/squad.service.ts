@@ -31,8 +31,8 @@ export async function getSquad(
  * user_chips rows — see squad.repository.ts). One-time action — the app
  * flow doc treats "build squad" as happening once, with "set
  * lineup"/transfers as the recurring per-gameweek actions. Editing an
- * existing squad is a transfers concern (separate module, not yet
- * built), so this rejects outright if the user already has one.
+ * existing squad is a transfers concern (see the transfers module), so
+ * this rejects outright if the user already has one.
  *
  * KNOWN MVP GAP: the "already has a squad" check below is an
  * application-layer guard, not a DB constraint — two concurrent build
@@ -89,9 +89,12 @@ export async function buildSquad(
  * are flagged unavailable. Deliberately does NOT block injured/suspended
  * — owning an injured player and just not scoring from them is a normal,
  * allowed choice in the FPL model this game is based on.
+ *
+ * Exported: transfers.service.ts reuses this to check an incoming
+ * player's eligibility on a transfer, rather than duplicating the rule.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
-function validateEligibility(players: PlayerForValidation[]): void {
+export function validateEligibility(players: PlayerForValidation[]): void {
   const ineligible = players.filter(
     (p) => p.removed || p.status === "unavailable"
   );
@@ -107,9 +110,13 @@ function validateEligibility(players: PlayerForValidation[]): void {
 /**
  * Checks exact role composition (not a min/max band — see the
  * cricket-vs-football differences doc, point 8).
+ *
+ * Exported: transfers.service.ts re-runs this against a proposed
+ * post-transfer squad, since a same-position swap keeps this valid by
+ * construction but it's still run for defense-in-depth.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
-function validateRoleQuotas(players: PlayerForValidation[]): void {
+export function validateRoleQuotas(players: PlayerForValidation[]): void {
   const counts: Record<string, number> = {
     wicket_keeper: 0,
     all_rounder: 0,
@@ -132,9 +139,13 @@ function validateRoleQuotas(players: PlayerForValidation[]): void {
  * Checks the overseas-player cap (Discovery Doc, F3: "Max 4 overseas
  * players") — a ceiling, not a mandatory count. A squad with 0 overseas
  * players is legal; a squad with 5 is not.
+ *
+ * Exported: transfers.service.ts re-runs this against a proposed
+ * post-transfer squad — a transfer can change overseas composition even
+ * when positions match.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
-function validateOverseasCount(players: PlayerForValidation[]): void {
+export function validateOverseasCount(players: PlayerForValidation[]): void {
   const overseasCount = players.filter((p) => p.is_overseas).length;
   if (overseasCount > MAX_OVERSEAS_COUNT) {
     throw badRequest(
@@ -147,9 +158,12 @@ function validateOverseasCount(players: PlayerForValidation[]): void {
 /**
  * Checks the per-franchise cap. See squadRules.config.ts for why this
  * value is a single named constant rather than inlined here.
+ *
+ * Exported: transfers.service.ts re-runs this against a proposed
+ * post-transfer squad.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
-function validateFranchiseLimit(players: PlayerForValidation[]): void {
+export function validateFranchiseLimit(players: PlayerForValidation[]): void {
   const countsByTeam = new Map<number, number>();
   for (const player of players) {
     if (player.real_team_id === null) continue;
@@ -174,9 +188,13 @@ function validateFranchiseLimit(players: PlayerForValidation[]): void {
  * cap above — that limits concentration in any one franchise, this
  * ensures the squad isn't drawn from too narrow a slice of the league
  * even while staying under that cap.
+ *
+ * Exported: transfers.service.ts re-runs this against a proposed
+ * post-transfer squad — swapping a player can narrow franchise spread
+ * even without violating the per-franchise cap.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
-function validateFranchiseSpread(players: PlayerForValidation[]): void {
+export function validateFranchiseSpread(players: PlayerForValidation[]): void {
   const distinctTeams = new Set(
     players.map((p) => p.real_team_id).filter((id): id is number => id !== null)
   );
@@ -190,9 +208,13 @@ function validateFranchiseSpread(players: PlayerForValidation[]): void {
 
 /**
  * Checks the total squad cost against the budget cap.
+ *
+ * Exported: transfers.service.ts re-runs this against a proposed
+ * post-transfer squad, since prices can differ between the outgoing and
+ * incoming player.
  * @param {PlayerForValidation[]} players Proposed squad's player rows.
  */
-function validateBudget(players: PlayerForValidation[]): void {
+export function validateBudget(players: PlayerForValidation[]): void {
   const totalCost = players.reduce((sum, p) => sum + p.now_cost, 0);
   if (totalCost > BUDGET_CAP_NOW_COST_UNITS) {
     throw badRequest(

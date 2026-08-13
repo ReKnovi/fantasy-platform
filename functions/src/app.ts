@@ -12,10 +12,17 @@ import {playerMatchStatsRouter} from "./modules/playerMS/playerMS.routes";
 import {squadSelectionRouter} from "./modules/squadSelection/squadSelection.routes";
 import {leaguesRouter} from "./modules/leagues/leagues.routes";
 import {squadRouter} from "./modules/squad/squad.routes";
+import {transfersRouter} from "./modules/transfers/transfers.routes";
 import {errorHandler} from "./middleware/errorHandler";
 import {notFoundHandler} from "./middleware/notFoundHandler";
+import {apiRateLimiter, authRateLimiter} from "./middleware/rateLimiter";
 
 export const app = express();
+
+// Firebase Functions/Cloud Run sits behind Google's proxy — trust exactly
+// one hop so req.ip reads the real client IP from X-Forwarded-For, not
+// the proxy's own address. Don't use `true` here (see note below).
+app.set("trust proxy", 1);
 
 app.use(cors({origin: true}));
 app.use(express.json());
@@ -25,21 +32,28 @@ app.get("/health", (_req, res) => {
   res.json({status: "ok"});
 });
 
-app.use("/dev/auth", devAuthRouter);
-app.use("/players", requireFirebaseAuth, playersRouter);
-app.use("/users", usersRouter);
-app.use("/real-teams", requireFirebaseAuth, realTeamsRouter);
-app.use("/gameweeks", requireFirebaseAuth, gameweeksRouter);
-app.use("/matches", requireFirebaseAuth, matchesRouter);
-app.use("/playing-xi", requireFirebaseAuth, playingXiRouter);
-app.use("/leagues", requireFirebaseAuth, leaguesRouter);
-/* eslint-disable operator-linebreak */
-app.use("/player-match-stats", requireFirebaseAuth, playerMatchStatsRouter);
-/* eslint-enable operator-linebreak */
-app.use("/squad", requireFirebaseAuth, squadRouter);
-/* eslint-disable operator-linebreak */
-app.use("/squad-selection", requireFirebaseAuth, squadSelectionRouter);
-/* eslint-enable operator-linebreak */
+app.use("/dev/auth", authRateLimiter, devAuthRouter);
+app.use("/players", apiRateLimiter, requireFirebaseAuth, playersRouter);
+app.use("/users", apiRateLimiter, requireFirebaseAuth, usersRouter);
+app.use("/real-teams", apiRateLimiter, requireFirebaseAuth, realTeamsRouter);
+app.use("/gameweeks", apiRateLimiter, requireFirebaseAuth, gameweeksRouter);
+app.use("/matches", apiRateLimiter, requireFirebaseAuth, matchesRouter);
+app.use("/playing-xi", apiRateLimiter, requireFirebaseAuth, playingXiRouter);
+app.use("/leagues", apiRateLimiter, requireFirebaseAuth, leaguesRouter);
+app.use(
+  "/player-match-stats",
+  apiRateLimiter,
+  requireFirebaseAuth,
+  playerMatchStatsRouter
+);
+app.use("/squad", apiRateLimiter, requireFirebaseAuth, squadRouter);
+app.use(
+  "/squad-selection",
+  apiRateLimiter,
+  requireFirebaseAuth,
+  squadSelectionRouter
+);
+app.use("/transfers", apiRateLimiter, requireFirebaseAuth, transfersRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
