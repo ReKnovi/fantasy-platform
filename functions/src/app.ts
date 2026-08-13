@@ -14,6 +14,7 @@ import {leaguesRouter} from "./modules/leagues/leagues.routes";
 import {squadRouter} from "./modules/squad/squad.routes";
 import {errorHandler} from "./middleware/errorHandler";
 import {notFoundHandler} from "./middleware/notFoundHandler";
+import {playerInsightsRouter} from "./modules/playerInsights/playerInsights.routes";
 
 export const app = express();
 
@@ -40,6 +41,7 @@ app.use("/squad", requireFirebaseAuth, squadRouter);
 /* eslint-disable operator-linebreak */
 app.use("/squad-selection", requireFirebaseAuth, squadSelectionRouter);
 /* eslint-enable operator-linebreak */
+app.use("/player-insights", requireFirebaseAuth, playerInsightsRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
