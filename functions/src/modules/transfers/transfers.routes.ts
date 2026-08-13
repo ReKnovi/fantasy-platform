@@ -13,11 +13,12 @@ transfersRouter.get(
   "/",
   asyncHandler(async (req: Request, res: Response) => {
     const gameweekIdRaw = req.query.gameweekId;
+    /* eslint-disable operator-linebreak */
     const gameweekId =
-      gameweekIdRaw !== undefined ?
-        parsePositiveInt(gameweekIdRaw, "gameweekId") :
-        undefined;
-
+      gameweekIdRaw !== undefined
+        ? parsePositiveInt(gameweekIdRaw, "gameweekId")
+        : undefined;
+    /* eslint-enable operator-linebreak */
     const appUser = await findOrCreateUser(res.locals.firebaseUser);
     const transfers = await getTransferHistory(appUser.id, gameweekId);
     res.json({data: transfers});

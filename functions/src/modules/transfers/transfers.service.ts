@@ -15,9 +15,10 @@ import {
 } from "../squad/squad.service";
 import {
   countFreeTransfersUsed,
-  executeTransfer,
   findTransfersByUser,
   TransferRow,
+  withLockedSquad,
+  writeTransfer,
 } from "./transfers.repository";
 
 // "-4pts/extra" per the Discovery Doc's F14 — stored here as a positive
@@ -70,6 +71,17 @@ export async function getTransferHistory(
  * cap/spread, budget) — a transfer that would leave the squad invalid is
  * rejected before anything is written.
  *
+ * Concurrency: squad state, replacement eligibility, and free-transfer
+ * classification are all read and validated *inside* withLockedSquad,
+ * against the same locked `client` the eventual write happens on. This
+ * closes a TOCTOU race flagged in review — previously, validation ran
+ * before any lock was acquired, so two concurrent transfer requests for
+ * the same user could each validate against the same stale pre-lock
+ * squad snapshot and jointly commit a squad that violates budget or
+ * role-quota rules. Now, a second concurrent request genuinely blocks
+ * on FOR UPDATE until the first fully commits, then re-reads and
+ * re-validates against real post-commit state.
+ *
  * Free-transfer cost logic: unlimited and free before the season starts
  * (see hasSeasonStarted above); once the season's under way, the first
  * transfer in a gameweek is free and every additional one costs
@@ -94,6 +106,9 @@ export async function makeTransfer(
     throw badRequest("playerOutId and playerInId must be different players");
   }
 
+  // Gameweek/deadline is global reference data, not per-user state —
+  // nothing here races against a concurrent transfer, so it's fine to
+  // check before acquiring the per-user squad lock.
   const gameweek = await getGameweekById(gameweekId);
   if (!gameweek) {
     throw notFound("Gameweek not found");
@@ -104,80 +119,89 @@ export async function makeTransfer(
     );
   }
 
-  const currentSquad = await findSquadByUserId(userId);
-  if (currentSquad.length === 0) {
-    throw badRequest("Build a squad before making transfers");
-  }
-  const owned = currentSquad.find((p) => p.player_id === playerOutId);
-  if (!owned) {
-    throw badRequest(`Player id ${playerOutId} is not in your squad`);
-  }
-  if (currentSquad.some((p) => p.player_id === playerInId)) {
-    throw badRequest(`Player id ${playerInId} is already in your squad`);
-  }
+  // Also global/reference-data-derived, safe to resolve before the lock.
+  const seasonStarted = await hasSeasonStarted();
 
-  const candidateRows = await findPlayersForValidation([
-    playerOutId,
-    playerInId,
-  ]);
-  const playerOut = candidateRows.find((r) => r.id === playerOutId);
-  const playerIn = candidateRows.find((r) => r.id === playerInId);
-  if (!playerOut || !playerIn) {
-    throw badRequest("Unknown player id(s)");
-  }
+  return withLockedSquad(userId, async (client) => {
+    const currentSquad = await findSquadByUserId(userId, client);
+    if (currentSquad.length === 0) {
+      throw badRequest("Build a squad before making transfers");
+    }
+    const owned = currentSquad.find((p) => p.player_id === playerOutId);
+    if (!owned) {
+      throw badRequest(`Player id ${playerOutId} is not in your squad`);
+    }
+    if (currentSquad.some((p) => p.player_id === playerInId)) {
+      throw badRequest(`Player id ${playerInId} is already in your squad`);
+    }
 
-  if (playerIn.position !== playerOut.position) {
-    throw badRequest(
-      "Replacement must be the same position as the outgoing player " +
-        `(${playerOut.position})`
+    const candidateRows = await findPlayersForValidation(
+      [playerOutId, playerInId],
+      client
     );
-  }
+    const playerOut = candidateRows.find((r) => r.id === playerOutId);
+    const playerIn = candidateRows.find((r) => r.id === playerInId);
+    if (!playerOut || !playerIn) {
+      throw badRequest("Unknown player id(s)");
+    }
 
-  // Build the proposed post-transfer squad and re-run every squad-level
-  // rule against it — a same-position swap can still break the overseas
-  // cap, a franchise limit, the franchise-spread minimum, or the budget.
-  // status/removed below are unused placeholders: only validateEligibility
-  // reads those fields, and it's only ever called on the incoming player
-  // (already-owned players aren't re-checked for eligibility on a
-  // transfer they weren't part of).
-  const proposedSquad: PlayerForValidation[] = currentSquad
-    .filter((p) => p.player_id !== playerOutId)
-    .map((p) => ({
-      id: p.player_id,
-      position: p.position,
-      is_overseas: p.is_overseas,
-      real_team_id: p.real_team_id,
-      now_cost: p.now_cost,
-      status: "available",
-      removed: false,
-    }));
-  proposedSquad.push(playerIn);
+    if (playerIn.position !== playerOut.position) {
+      throw badRequest(
+        "Replacement must be the same position as the outgoing player " +
+          `(${playerOut.position})`
+      );
+    }
 
-  validateEligibility([playerIn]);
-  validateRoleQuotas(proposedSquad);
-  validateOverseasCount(proposedSquad);
-  validateFranchiseLimit(proposedSquad);
-  validateFranchiseSpread(proposedSquad);
-  validateBudget(proposedSquad);
+    // Build the proposed post-transfer squad and re-run every squad-level
+    // rule against it — a same-position swap can still break the overseas
+    // cap, a franchise limit, the franchise-spread minimum, or the budget.
+    // status/removed below are unused placeholders: only validateEligibility
+    // reads those fields, and it's only ever called on the incoming player
+    // (already-owned players aren't re-checked for eligibility on a
+    // transfer they weren't part of).
+    const proposedSquad: PlayerForValidation[] = currentSquad
+      .filter((p) => p.player_id !== playerOutId)
+      .map((p) => ({
+        id: p.player_id,
+        position: p.position,
+        is_overseas: p.is_overseas,
+        real_team_id: p.real_team_id,
+        now_cost: p.now_cost,
+        status: "available",
+        removed: false,
+      }));
+    proposedSquad.push(playerIn);
 
-  let transferType: "free" | "paid";
-  let pointsCost: number;
-  if (!(await hasSeasonStarted())) {
-    transferType = "free";
-    pointsCost = 0;
-  } else {
-    const freeTransfersUsed = await countFreeTransfersUsed(userId, gameweekId);
-    transferType = freeTransfersUsed === 0 ? "free" : "paid";
-    pointsCost = transferType === "free" ? 0 : PAID_TRANSFER_POINT_COST;
-  }
+    validateEligibility([playerIn]);
+    validateRoleQuotas(proposedSquad);
+    validateOverseasCount(proposedSquad);
+    validateFranchiseLimit(proposedSquad);
+    validateFranchiseSpread(proposedSquad);
+    validateBudget(proposedSquad);
 
-  return executeTransfer({
-    userId,
-    gameweekId,
-    playerOutId,
-    playerInId,
-    purchasePriceIn: playerIn.now_cost,
-    transferType,
-    pointsCost,
+    let transferType: "free" | "paid";
+    let pointsCost: number;
+    if (!seasonStarted) {
+      transferType = "free";
+      pointsCost = 0;
+    } else {
+      const freeTransfersUsed = await countFreeTransfersUsed(
+        userId,
+        gameweekId,
+        client
+      );
+      transferType = freeTransfersUsed === 0 ? "free" : "paid";
+      pointsCost = transferType === "free" ? 0 : PAID_TRANSFER_POINT_COST;
+    }
+
+    return writeTransfer(client, {
+      userId,
+      gameweekId,
+      playerOutId,
+      playerInId,
+      purchasePriceIn: playerIn.now_cost,
+      transferType,
+      pointsCost,
+    });
   });
 }
