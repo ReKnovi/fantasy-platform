@@ -33,22 +33,6 @@ app.get("/health", (_req, res) => {
   res.json({status: "ok"});
 });
 
-app.use("/dev/auth", devAuthRouter);
-app.use("/players", requireFirebaseAuth, playersRouter);
-app.use("/users", usersRouter);
-app.use("/real-teams", requireFirebaseAuth, realTeamsRouter);
-app.use("/gameweeks", requireFirebaseAuth, gameweeksRouter);
-app.use("/matches", requireFirebaseAuth, matchesRouter);
-app.use("/playing-xi", requireFirebaseAuth, playingXiRouter);
-app.use("/leagues", requireFirebaseAuth, leaguesRouter);
-/* eslint-disable operator-linebreak */
-app.use("/player-match-stats", requireFirebaseAuth, playerMatchStatsRouter);
-/* eslint-enable operator-linebreak */
-app.use("/squad", requireFirebaseAuth, squadRouter);
-/* eslint-disable operator-linebreak */
-app.use("/squad-selection", requireFirebaseAuth, squadSelectionRouter);
-/* eslint-enable operator-linebreak */
-app.use("/player-insights", requireFirebaseAuth, playerInsightsRouter);
 app.use("/dev/auth", authRateLimiter, devAuthRouter);
 app.use("/players", apiRateLimiter, requireFirebaseAuth, playersRouter);
 app.use("/users", apiRateLimiter, requireFirebaseAuth, usersRouter);
@@ -70,6 +54,7 @@ app.use(
   requireFirebaseAuth,
   squadSelectionRouter
 );
+app.use("/player-insights", apiRateLimiter, requireFirebaseAuth, playerInsightsRouter);
 app.use("/transfers", apiRateLimiter, requireFirebaseAuth, transfersRouter);
 
 app.use(notFoundHandler);
