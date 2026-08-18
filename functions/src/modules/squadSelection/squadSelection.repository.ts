@@ -52,6 +52,30 @@ export async function findOwnedPlayerIds(userId: string): Promise<number[]> {
   return result.rows.map((r) => r.player_id);
 }
 
+/**
+ * Returns which of the given player ids appear in the confirmed Playing
+ * XI for any match in a gameweek — i.e., which of a user's selected
+ * players actually took the field that round. A gameweek spans multiple
+ * matches (a round; see the differences doc, point 1), so this checks
+ * across every match in that gameweek, not a single match_id.
+ * @param {number} gameweekId gameweeks.id.
+ * @param {number[]} playerIds Player ids to check.
+ */
+export async function findPlayedPlayerIds(
+  gameweekId: number,
+  playerIds: number[]
+): Promise<Set<number>> {
+  const pool = await getPool();
+  const result = await pool.query<{player_id: number}>(
+    `SELECT DISTINCT px.player_id
+     FROM playing_xi px
+     JOIN matches m ON m.id = px.match_id
+     WHERE m.gameweek_id = $1 AND px.player_id = ANY($2::int[])`,
+    [gameweekId, playerIds]
+  );
+  return new Set(result.rows.map((r) => r.player_id));
+}
+
 export interface SelectionEntry {
   playerId: number;
   isStarting: boolean;

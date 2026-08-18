@@ -1,5 +1,11 @@
-import {PoolClient} from "pg";
+import {Pool, PoolClient} from "pg";
 import {getPool, withTransaction} from "../../database/pool";
+
+// Both Pool and PoolClient expose a compatible .query() signature —
+// this lets read functions run against either a fresh pool connection
+// (normal case) or a specific locked client (inside a transaction),
+// without duplicating the query logic for each caller type.
+type Queryable = Pool | PoolClient;
 
 export interface SquadPlayerRow {
   id: number;
@@ -31,13 +37,20 @@ const DETAIL_SELECT = `
 /**
  * Returns a user's full squad with player details joined in — the
  * primary read path for the "my team" screen.
+ *
+ * Accepts an optional locked `client` so callers inside a transaction
+ * (e.g. transfers.service.ts holding a FOR UPDATE lock on this user's
+ * squad_players rows) read the true in-flight state instead of a
+ * separate pool connection that could see stale pre-lock data.
  * @param {string} userId users.id.
+ * @param {Queryable | undefined} client Optional locked transaction client.
  */
 export async function findSquadByUserId(
-  userId: string
+  userId: string,
+  client?: Queryable
 ): Promise<SquadPlayerDetailRow[]> {
-  const pool = await getPool();
-  const result = await pool.query<SquadPlayerDetailRow>(
+  const queryable = client ?? (await getPool());
+  const result = await queryable.query<SquadPlayerDetailRow>(
     `${DETAIL_SELECT} WHERE sp.user_id = $1 ORDER BY p.position, p.name`,
     [userId]
   );
@@ -59,13 +72,20 @@ export interface PlayerForValidation {
  * server-side validation (role/overseas/franchise/budget/eligibility) —
  * never trust client-submitted position/price/is_overseas values, since
  * those all live authoritatively on the players row.
+ *
+ * Accepts an optional locked `client` for the same reason as
+ * findSquadByUserId above — kept consistent even though `players` isn't
+ * currently written to inside the transfer transaction, since that
+ * changes the moment priceUpdateJob (tech plan §11) lands.
  * @param {number[]} playerIds Proposed squad's player ids.
+ * @param {Queryable | undefined} client Optional locked transaction client.
  */
 export async function findPlayersForValidation(
-  playerIds: number[]
+  playerIds: number[],
+  client?: Queryable
 ): Promise<PlayerForValidation[]> {
-  const pool = await getPool();
-  const result = await pool.query<PlayerForValidation>(
+  const queryable = client ?? (await getPool());
+  const result = await queryable.query<PlayerForValidation>(
     `SELECT id, position, is_overseas, real_team_id, now_cost, status, removed
      FROM players WHERE id = ANY($1::int[])`,
     [playerIds]
