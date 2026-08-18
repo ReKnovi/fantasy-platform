@@ -15,6 +15,7 @@ import {squadRouter} from "./modules/squad/squad.routes";
 import {transfersRouter} from "./modules/transfers/transfers.routes";
 import {errorHandler} from "./middleware/errorHandler";
 import {notFoundHandler} from "./middleware/notFoundHandler";
+import {playerInsightsRouter} from "./modules/playerInsights/playerInsights.routes";
 import {apiRateLimiter, authRateLimiter} from "./middleware/rateLimiter";
 
 export const app = express();
@@ -53,6 +54,7 @@ app.use(
   requireFirebaseAuth,
   squadSelectionRouter
 );
+app.use("/player-insights", apiRateLimiter, requireFirebaseAuth, playerInsightsRouter);
 app.use("/transfers", apiRateLimiter, requireFirebaseAuth, transfersRouter);
 
 app.use(notFoundHandler);
