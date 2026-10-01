@@ -22,13 +22,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "pg": "^8.22.0"
+    "pg": "^8.23.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0",
+    "@types/pg": "^8.23.1",
     "husky": "^9.1.7",
-    "lint-staged": "^17.3.0",
-    "prettier": "^3.9.6"
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9"
   },
   "lint-staged": {
     "*.{js,ts,json,md,yml,yaml,html,css,sql}": [
